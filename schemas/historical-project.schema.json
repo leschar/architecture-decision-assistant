@@ -1,0 +1,104 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Archived architectural project record",
+  "description": "Local history metadata linked to an immutable project snapshot; it is not a recommendation.",
+  "type": "object",
+  "required": [
+    "schemaVersion",
+    "archiveId",
+    "projectId",
+    "projectRevision",
+    "snapshotFile",
+    "contentFingerprint",
+    "archivedAt",
+    "archiveConfirmation",
+    "profileVersion",
+    "features",
+    "decisionReferences"
+  ],
+  "properties": {
+    "schemaVersion": { "const": "1.0" },
+    "archiveId": {
+      "type": "string",
+      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]*$"
+    },
+    "projectId": { "type": "string", "minLength": 1 },
+    "projectRevision": { "type": "string", "minLength": 1 },
+    "snapshotFile": {
+      "type": "string",
+      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]*\\.json$"
+    },
+    "contentFingerprint": {
+      "type": "string",
+      "pattern": "^sha256:[a-f0-9]{64}$"
+    },
+    "archivedAt": { "type": "string", "format": "date-time" },
+    "archiveConfirmation": {
+      "type": "object",
+      "required": ["confirmedBy", "confirmedAt"],
+      "properties": {
+        "confirmedBy": { "type": "string", "minLength": 1 },
+        "confirmedAt": { "type": "string", "format": "date-time" },
+        "note": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "profileVersion": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "features": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/feature" }
+    },
+    "decisionReferences": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["decisionId", "title"],
+        "properties": {
+          "decisionId": { "type": "string", "minLength": 1 },
+          "title": { "type": "string", "minLength": 1 },
+          "decisionRevision": { "type": "string", "minLength": 1 }
+        },
+        "additionalProperties": false
+      }
+    },
+    "catalogFingerprint": { "type": "string", "minLength": 1 },
+    "analysisId": { "type": "string", "minLength": 1 }
+  },
+  "$defs": {
+    "scalar": { "type": ["string", "number", "boolean"] },
+    "feature": {
+      "type": "object",
+      "required": ["path", "status"],
+      "properties": {
+        "path": { "type": "string", "pattern": "^project\\.[A-Za-z0-9._-]+$" },
+        "status": {
+          "type": "string",
+          "enum": ["Confirmed", "Unknown", "NotApplicable"]
+        },
+        "value": {
+          "oneOf": [
+            { "$ref": "#/$defs/scalar" },
+            { "type": "array", "items": { "$ref": "#/$defs/scalar" } }
+          ]
+        },
+        "unit": { "type": "string", "minLength": 1 },
+        "scenario": { "type": "string", "minLength": 1 }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": { "status": { "const": "Confirmed" } },
+            "required": ["status"]
+          },
+          "then": { "required": ["value"] },
+          "else": { "not": { "required": ["value"] } }
+        }
+      ],
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,25 @@
+Atue como Product Owner Sênior.
+
+Com base em toda a especificação criada anteriormente.
+
+O backlog normativo está em [product-backlog.md](../docs/product-backlog.md).
+Ele organiza o trabalho nas seis fases abaixo e detalha:
+
+- Épicos, features, histórias de usuário e tarefas técnicas;
+- critérios de aceite verificáveis;
+- prioridades, complexidade, riscos e dependências;
+- guardrails e decisões que bloqueiam a implementação.
+
+Fases obrigatórias:
+
+Fase 1 - MVP
+Fase 2 - Motor de Regras
+Fase 3 - Diagramas
+Fase 4 - ADR
+Fase 5 - Conhecimento Histórico
+Fase 6 - Plataforma Enterprise
+
+Esta etapa atualiza especificações e documentos apenas; não implementa código.
+Clean Architecture, DDD, JSON local, ausência inicial de banco e ausência de IA
+generativa permanecem restrições explícitas. Qualquer mudança futura depende
+de decisão de produto e revisão das especificações pertinentes.

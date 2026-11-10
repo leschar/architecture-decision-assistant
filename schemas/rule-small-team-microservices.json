@@ -1,0 +1,37 @@
+{
+  "id": "small-team-microservices-cost",
+  "kind": "Rule",
+  "schemaVersion": "1.0",
+  "version": "1.0.0",
+  "name": "Equipe pequena e custo operacional de microservices",
+  "description": "Registra o custo operacional adicional de microservices para equipes pequenas.",
+  "category": "ArchitectureFit",
+  "enabled": true,
+  "weight": 3,
+  "appliesTo": {
+    "kinds": ["Architecture"],
+    "ids": ["microservices"]
+  },
+  "conditions": {
+    "allOf": [
+      {
+        "fact": "project.teamSize",
+        "operator": "LessThanOrEqual",
+        "value": 8
+      }
+    ]
+  },
+  "effects": [
+    {
+      "type": "Score",
+      "dimension": "fit",
+      "points": -60,
+      "rationale": "Uma equipe pequena pode ter dificuldade para sustentar a carga operacional de serviços distribuídos."
+    },
+    {
+      "type": "Flag",
+      "severity": "Warning",
+      "rationale": "Validar capacidade operacional, observabilidade e autonomia dos times antes de escolher microservices."
+    }
+  ]
+}

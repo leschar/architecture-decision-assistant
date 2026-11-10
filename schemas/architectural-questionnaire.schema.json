@@ -1,0 +1,147 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Architectural questionnaire",
+  "type": "object",
+  "required": ["schemaVersion", "questionnaireId", "version", "locale", "questions"],
+  "properties": {
+    "schemaVersion": { "const": "1.0" },
+    "questionnaireId": { "type": "string", "minLength": 1 },
+    "version": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$" },
+    "locale": { "type": "string", "minLength": 2 },
+    "questions": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/question" }
+    }
+  },
+  "$defs": {
+    "condition": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": ["fact", "operator"],
+          "properties": {
+            "fact": { "type": "string", "minLength": 1 },
+            "operator": {
+              "type": "string",
+              "enum": [
+                "Equals", "NotEquals", "GreaterThan", "GreaterThanOrEqual",
+                "LessThan", "LessThanOrEqual", "Contains", "In", "Exists",
+                "NotExists"
+              ]
+            },
+            "value": {
+              "oneOf": [
+                { "type": ["string", "number", "boolean", "null"] },
+                {
+                  "type": "array",
+                  "items": { "type": ["string", "number", "boolean", "null"] }
+                }
+              ]
+            }
+          },
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "operator": { "enum": ["Exists", "NotExists"] }
+                },
+                "required": ["operator"]
+              },
+              "then": { "not": { "required": ["value"] } },
+              "else": { "required": ["value"] }
+            }
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": ["allOf"],
+          "properties": {
+            "allOf": {
+              "type": "array",
+              "minItems": 1,
+              "items": { "$ref": "#/$defs/condition" }
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": ["anyOf"],
+          "properties": {
+            "anyOf": {
+              "type": "array",
+              "minItems": 1,
+              "items": { "$ref": "#/$defs/condition" }
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": ["not"],
+          "properties": {
+            "not": { "$ref": "#/$defs/condition" }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "question": {
+      "type": "object",
+      "required": [
+        "id",
+        "category",
+        "prompt",
+        "objectiveAndImpact",
+        "affectedAreas",
+        "weight",
+        "responseType",
+        "responseGuidance",
+        "factPath",
+        "phase",
+        "version"
+      ],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z]{3}-\\d{2}$" },
+        "category": {
+          "type": "string",
+          "enum": [
+            "Negócio",
+            "Usuários",
+            "Escalabilidade",
+            "Disponibilidade e recuperação",
+            "Observabilidade",
+            "Equipe e capacidade operacional",
+            "Infraestrutura e operação",
+            "Segurança e privacidade",
+            "Integrações",
+            "Dados",
+            "Performance",
+            "Cloud e implantação",
+            "Governança e compliance"
+          ]
+        },
+        "prompt": { "type": "string", "minLength": 1 },
+        "objectiveAndImpact": { "type": "string", "minLength": 1 },
+        "affectedAreas": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "weight": { "type": "integer", "minimum": 1, "maximum": 5 },
+        "responseType": {
+          "type": "string",
+          "enum": ["text", "singleChoice", "multiChoice", "boolean", "structured"]
+        },
+        "responseGuidance": { "type": "string", "minLength": 1 },
+        "factPath": { "type": "string", "pattern": "^project\\.questionnaire\\.answers\\.[a-z]{3}-\\d{2}$" },
+        "phase": { "type": "string", "enum": ["core", "conditional"] },
+        "version": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$" },
+        "showWhen": { "$ref": "#/$defs/condition" }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

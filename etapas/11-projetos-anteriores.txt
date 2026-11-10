@@ -1,0 +1,53 @@
+ETAPA 11 — ARCHITECTURAL KNOWLEDGE HISTORY
+
+## Objetivo
+
+Especificar armazenamento local de snapshots de projetos anteriores, busca,
+comparação, similaridade estruturada e reuso explícito de decisões sem banco,
+serviço externo ou inferência generativa.
+
+## Referência normativa
+
+- [architectural-knowledge-history.md](../docs/architectural-knowledge-history.md):
+  modelo, layout JSON, busca, comparação, similaridade, estatísticas,
+  consentimento, trade-offs e aceite.
+- [historical-project.schema.json](../schemas/historical-project.schema.json):
+  registro e features confirmadas arquivadas.
+- [history-index.schema.json](../schemas/history-index.schema.json): índice
+  local reconstruível.
+- [history-similarity-policy.schema.json](../schemas/history-similarity-policy.schema.json):
+  política de comparação determinística versionada.
+- [domain-model.md](../docs/domain-model.md): bounded context futuro e
+  referências de Projeto/Decisão.
+- [application-experience.md](../docs/application-experience.md): limites de
+  apresentação e capacidade futura.
+
+## Revisão crítica
+
+- Arquivar revisão é escolha explícita; snapshot é imutável e JSON.
+- Similaridade usa somente dimensões estruturadas confirmadas, comparadores e
+  pesos versionados; exibe coverage e motivos de dimensões excluídas.
+- Sem comparabilidade suficiente retorna `NotComparable`/`InsufficientCoverage`.
+- Popularidade/frequência não são sucesso, score ou recomendação.
+- Reuso copia ou referencia uma decisão histórica como proposta com
+  proveniência; confirmação no projeto atual é necessária.
+- Estatísticas descrevem população e denominador; dado local não é enviado ou
+  compartilhado automaticamente.
+- Índice é reconstruível; paths permanecem confinados ao workspace.
+
+## Critérios de aceite
+
+1. Snapshot, fingerprint, fonte, versão de perfil e consentimento são
+   verificáveis.
+2. JSON inválido, arquivo ausente ou hash divergente não participa como dado
+   confiável.
+3. Valores Unknown/NotApplicable e incompatibilidade de unidade/cenário não
+   viram igualdade ou zero.
+4. Similaridade é reproduzível e explica dimensões, pesos, versão e cobertura.
+5. Resultado histórico não altera score, análise, seleção ou decisão.
+6. Remoção/falha parcial e reconstrução do índice são explícitas e testáveis.
+7. Nenhum banco, busca vetorial, embedding, IA ou compartilhamento é
+   introduzido.
+
+Esta etapa é de especificação. Não implementar mecanismo de histórico ou
+busca.

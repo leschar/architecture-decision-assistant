@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Architectural history index",
+  "description": "Rebuildable local index of archived project records; snapshots remain the source of truth.",
+  "type": "object",
+  "required": ["schemaVersion", "indexRevision", "entries"],
+  "properties": {
+    "schemaVersion": { "const": "1.0" },
+    "indexRevision": { "type": "integer", "minimum": 1 },
+    "entries": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "archiveId",
+          "recordFile",
+          "projectId",
+          "archivedAt",
+          "contentFingerprint"
+        ],
+        "properties": {
+          "archiveId": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]*$"
+          },
+          "recordFile": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]*\\.json$"
+          },
+          "projectId": { "type": "string", "minLength": 1 },
+          "archivedAt": { "type": "string", "format": "date-time" },
+          "contentFingerprint": {
+            "type": "string",
+            "pattern": "^sha256:[a-f0-9]{64}$"
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

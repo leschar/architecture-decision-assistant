@@ -1,0 +1,235 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Architecture Decision Assistant project",
+  "type": "object",
+  "required": [
+    "schemaVersion",
+    "id",
+    "revision",
+    "name",
+    "purpose",
+    "createdAt",
+    "updatedAt",
+    "context",
+    "requirements",
+    "decisions"
+  ],
+  "properties": {
+    "schemaVersion": { "const": "1.0" },
+    "id": { "type": "string", "format": "uuid" },
+    "revision": { "type": "integer", "minimum": 1 },
+    "name": { "type": "string", "minLength": 1, "maxLength": 120 },
+    "purpose": { "type": "string", "minLength": 1, "maxLength": 2000 },
+    "createdAt": { "type": "string", "format": "date-time" },
+    "updatedAt": { "type": "string", "format": "date-time" },
+    "context": { "$ref": "#/$defs/context" },
+    "requirements": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/requirement" }
+    },
+    "decisions": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/decision" }
+    },
+    "structure": {
+      "$ref": "#/$defs/structure"
+    }
+  },
+  "$defs": {
+    "structure": {
+      "type": "object",
+      "required": ["elements", "connections"],
+      "properties": {
+        "elements": { "type": "array", "items": { "$ref": "#/$defs/structuralElement" } },
+        "connections": { "type": "array", "items": { "$ref": "#/$defs/structuralConnection" } }
+      },
+      "additionalProperties": false
+    },
+    "structuralElement": {
+      "type": "object",
+      "required": ["id", "name", "type", "status", "provenance"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]*$", "maxLength": 120 },
+        "name": { "type": "string", "minLength": 1, "maxLength": 120 },
+        "type": { "enum": ["Person", "SoftwareSystem", "Container", "Component"] },
+        "parentId": { "type": "string", "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]*$", "maxLength": 120 },
+        "description": { "type": "string", "minLength": 1, "maxLength": 2000 },
+        "responsibility": { "type": "string", "minLength": 1, "maxLength": 1000 },
+        "technology": { "type": "string", "minLength": 1, "maxLength": 120 },
+        "status": { "enum": ["Confirmed", "Proposed", "Unresolved"] },
+        "provenance": { "$ref": "#/$defs/structuralProvenance" }
+      },
+      "additionalProperties": false
+    },
+    "structuralConnection": {
+      "type": "object",
+      "required": ["id", "sourceId", "targetId", "description", "interactionType", "status", "provenance"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]*$", "maxLength": 120 },
+        "sourceId": { "type": "string", "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]*$", "maxLength": 120 },
+        "targetId": { "type": "string", "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]*$", "maxLength": 120 },
+        "description": { "type": "string", "minLength": 1, "maxLength": 2000 },
+        "interactionType": { "enum": ["Synchronous", "AsynchronousCommand", "AsynchronousEvent", "BatchTransfer", "Unknown"] },
+        "protocol": { "type": "string", "minLength": 1, "maxLength": 120 },
+        "messageName": { "type": "string", "minLength": 1, "maxLength": 200 },
+        "status": { "enum": ["Confirmed", "Proposed", "Unresolved"] },
+        "provenance": { "$ref": "#/$defs/structuralProvenance" }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "interactionType": { "const": "AsynchronousEvent" } }, "required": ["interactionType"] },
+          "then": { "required": ["messageName"] },
+          "else": { "not": { "required": ["messageName"] } }
+        }
+      ],
+      "additionalProperties": false
+    },
+    "structuralProvenance": {
+      "type": "object",
+      "required": ["sourceKind"],
+      "properties": {
+        "sourceKind": { "enum": ["Manual", "Requirement", "Decision", "KnowledgeItem", "Blueprint"] },
+        "sourceId": { "type": "string", "minLength": 1, "maxLength": 120 },
+        "sourceVersion": { "type": "string", "minLength": 1, "maxLength": 100 }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "sourceKind": { "const": "Manual" } }, "required": ["sourceKind"] },
+          "then": { "not": { "anyOf": [{ "required": ["sourceId"] }, { "required": ["sourceVersion"] }] } },
+          "else": { "required": ["sourceId"] }
+        }
+      ],
+      "additionalProperties": false
+    },
+    "context": {
+      "type": "object",
+      "properties": {
+        "businessDomain": { "type": "string", "minLength": 1, "maxLength": 120 },
+        "teamSize": { "type": "integer", "minimum": 1 },
+        "criticality": {
+          "type": "string",
+          "enum": ["Low", "Medium", "High", "MissionCritical"]
+        },
+        "scalabilityTarget": {
+          "type": "string",
+          "enum": ["Low", "Medium", "High"]
+        },
+        "constraints": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1, "maxLength": 500 }
+        }
+      },
+      "additionalProperties": false
+    },
+    "requirement": {
+      "type": "object",
+      "required": [
+        "id",
+        "description",
+        "classification",
+        "status",
+        "origin",
+        "createdAt",
+        "updatedAt"
+      ],
+      "properties": {
+        "id": { "type": "string", "format": "uuid" },
+        "description": { "type": "string", "minLength": 1, "maxLength": 2000 },
+        "classification": {
+          "type": "string",
+          "enum": ["Functional", "Quality", "Constraint"]
+        },
+        "priority": {
+          "type": "string",
+          "enum": ["Must", "Should", "Could"]
+        },
+        "status": { "type": "string", "enum": ["Confirmed", "Provisional"] },
+        "origin": { "const": "UserProvided" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "additionalProperties": false
+    },
+    "decision": {
+      "type": "object",
+      "required": [
+        "id",
+        "selectedAlternativeId",
+        "selectedAlternativeKind",
+        "consideredAlternatives",
+        "status",
+        "justification",
+        "recordedBy",
+        "recordedAt",
+        "revision"
+      ],
+      "properties": {
+        "id": { "type": "string", "format": "uuid" },
+        "selectedAlternativeId": { "type": "string", "minLength": 1 },
+        "selectedAlternativeKind": {
+          "type": "string",
+          "enum": ["Architecture", "Pattern", "Technology"]
+        },
+        "consideredAlternatives": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "uniqueItems": true
+        },
+        "status": {
+          "type": "string",
+          "enum": ["Proposed", "Accepted", "Rejected", "Superseded"]
+        },
+        "justification": { "type": "string", "minLength": 1, "maxLength": 4000 },
+        "consequences": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1, "maxLength": 2000 }
+        },
+        "recordedBy": { "type": "string", "minLength": 1, "maxLength": 120 },
+        "recordedAt": { "type": "string", "format": "date-time" },
+        "revision": { "type": "integer", "minimum": 1 },
+        "analysisId": { "type": "string", "format": "uuid" },
+        "selectedAlternativeVersion": { "type": "string", "minLength": 1, "maxLength": 100 },
+        "statusChangedBy": { "type": "string", "minLength": 1, "maxLength": 120 },
+        "statusChangedAt": { "type": "string", "format": "date-time" },
+        "supersededByDecisionId": { "type": "string", "format": "uuid" },
+        "supersedesDecisionId": { "type": "string", "format": "uuid" },
+        "historicalSource": {
+          "type": "object",
+          "required": [
+            "archiveId",
+            "sourceProjectId",
+            "sourceDecisionId",
+            "sourceProjectRevision",
+            "snapshotFingerprint"
+          ],
+          "properties": {
+            "archiveId": { "type": "string", "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,119}$" },
+            "sourceProjectId": { "type": "string", "format": "uuid" },
+            "sourceDecisionId": { "type": "string", "format": "uuid" },
+            "sourceProjectRevision": { "type": "string", "minLength": 1 },
+            "snapshotFingerprint": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" }
+          },
+          "additionalProperties": false
+        },
+        "statusHistory": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["revision", "previousStatus", "status", "changedBy", "changedAt"],
+            "properties": {
+              "revision": { "type": "integer", "minimum": 2 },
+              "previousStatus": { "type": "string", "enum": ["Proposed", "Accepted", "Rejected", "Superseded"] },
+              "status": { "type": "string", "enum": ["Proposed", "Accepted", "Rejected", "Superseded"] },
+              "changedBy": { "type": "string", "minLength": 1, "maxLength": 120 },
+              "changedAt": { "type": "string", "format": "date-time" },
+              "supersededByDecisionId": { "type": "string", "format": "uuid" }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

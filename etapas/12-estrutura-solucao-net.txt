@@ -1,0 +1,57 @@
+ETAPA 12 — ESTRUTURA DA SOLUÇÃO .NET
+
+## Objetivo
+
+Especificar projetos, pastas e dependências da solução .NET para o
+Architecture Decision Assistant, alinhando Blazor Server, Clean Architecture,
+DDD, MediatR, FluentValidation, Serilog, persistência JSON e a decisão de
+suporte da versão .NET.
+
+## Referência normativa
+
+- [dotnet-solution-architecture.md](../docs/dotnet-solution-architecture.md):
+  árvore, responsabilidades, dependências, persistência, testes, trade-offs e
+  critérios de aceite.
+- [application-experience.md](../docs/application-experience.md): fronteira da
+  UI e fluxos.
+- [domain-model.md](../docs/domain-model.md): agregados e bounded contexts.
+- Schemas versionados em `../schemas/`.
+
+## Projetos conceituais
+
+- `ArchitectureAssistant.Web`
+- `ArchitectureAssistant.Application`
+- `ArchitectureAssistant.Domain`
+- `ArchitectureAssistant.Infrastructure`
+- `ArchitectureAssistant.KnowledgeBase` (conteúdo JSON, sem regras compiladas)
+- projetos de teste separados por camada.
+
+## Revisão crítica
+
+- Domain não referencia UI, Infrastructure, I/O ou framework de aplicação.
+- Web encaminha intenções e apresenta Result; não implementa regra.
+- Infrastructure implementa portas JSON e valida schemas; não toma decisão.
+- Catálogo permanece extensível em arquivos externos dentro dos contratos,
+  sem recompilação.
+- CQRS/MediatR é aplicado quando útil, não como requisito mecânico para toda
+  função.
+- Exceções não são fluxo normal de negócio; usar Result Pattern.
+- .NET 10 LTS (`net10.0`) foi aprovado explicitamente para a implementação em
+  lugar do requisito inicial .NET 9, cujo suporte termina em 10/11/2026.
+- O MVP é self-hosted local para um usuário, com workspace configurado no host;
+  não habilitar acesso remoto ou multiusuário implicitamente.
+
+## Critérios de aceite
+
+1. Árvore e grafo de projetos não permitem dependência circular.
+2. Camadas Web/Application/Domain/Infrastructure/KnowledgeBase têm
+   responsabilidades e fronteiras explícitas.
+3. Solução não adiciona banco, ORM ou dependência de IA.
+4. Diretório externo de conhecimento permite extensão JSON sem recompilar.
+5. Testes verificam cada camada e não entram em referências de produção.
+6. Validação, logging e Result Pattern seguem os limites documentados.
+7. A versão alvo aprovada é .NET 10 LTS; SDK/runtime e modo de hospedagem são
+   documentados antes de releases produtivos.
+
+Esta etapa é de especificação. Não criar solution, projetos, classes,
+pacotes ou configuração de build.

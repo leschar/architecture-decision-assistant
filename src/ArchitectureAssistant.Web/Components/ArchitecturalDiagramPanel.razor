@@ -1,0 +1,526 @@
+@using ArchitectureAssistant.Application.Diagrams
+@using ArchitectureAssistant.Application.Projects
+@using ArchitectureAssistant.Domain.Diagrams
+@using ArchitectureAssistant.Domain.Projects
+@using System.Globalization
+@using MediatR
+@implements IDisposable
+@inject ISender Sender
+
+<section class="panel" aria-labelledby="diagram-heading">
+    <div class="panel-heading">
+        <div>
+            <p class="eyebrow">PROJEÇÃO C4</p>
+            <h2 id="diagram-heading">Preview arquitetural</h2>
+        </div>
+    </div>
+    <p>O preview usa somente elementos e interações registrados no modelo estrutural do projeto.</p>
+
+    @if (_errors.Count > 0)
+    {
+        <div class="alert alert-danger" role="alert">
+            <ul class="mb-0">
+                @foreach (var error in _errors)
+                {
+                    <li>@error</li>
+                }
+            </ul>
+        </div>
+    }
+    @if (_layoutWarnings.Count > 0)
+    {
+        <div class="alert alert-warning" role="status">
+            @foreach (var warning in _layoutWarnings)
+            {
+                <p>@warning</p>
+            }
+        </div>
+    }
+
+    <div class="form-row">
+        <div class="field">
+            <label for="diagram-type">Nível C4</label>
+            <InputSelect id="diagram-type" class="form-select" @bind-Value="_diagramType" @bind:after="OnDiagramInputsChangedAsync">
+                @foreach (var type in Enum.GetValues<ArchitecturalDiagramType>())
+                {
+                    <option value="@type">@type</option>
+                }
+            </InputSelect>
+        </div>
+        <div class="field">
+            <label for="diagram-scope">Escopo</label>
+            <InputSelect id="diagram-scope" class="form-select" @bind-Value="_scopeId" @bind:after="OnDiagramInputsChangedAsync">
+                <option value="">Selecione</option>
+                @foreach (var scope in AvailableScopes)
+                {
+                    <option value="@scope.Id">@scope.Name (@scope.Id)</option>
+                }
+            </InputSelect>
+        </div>
+    </div>
+    <button class="btn btn-primary" type="button" disabled="@(_isBusy || string.IsNullOrWhiteSpace(_scopeId))" @onclick="GeneratePreviewAsync">
+        @(_isBusy ? "Gerando…" : "Gerar preview")
+    </button>
+    <button class="btn btn-outline-primary" type="button" disabled="@(!IsCurrentPreview || _isBusy)" @onclick="SaveSnapshotAsync">
+        Salvar snapshot JSON
+    </button>
+    @if (!string.IsNullOrWhiteSpace(_notice))
+    {
+        <p role="status">@_notice</p>
+    }
+
+    <div class="saved-diagrams">
+        <h3>Snapshots salvos</h3>
+        @if (_savedDiagrams.Count == 0)
+        {
+            <p>Nenhum snapshot salvo para este projeto.</p>
+        }
+        else
+        {
+            <div class="form-row">
+                <div class="field">
+                    <label for="saved-diagram">Snapshot</label>
+                    <InputSelect id="saved-diagram" class="form-select" @bind-Value="_selectedSnapshotId">
+                        @foreach (var saved in _savedDiagrams)
+                        {
+                            <option value="@saved.DiagramId">@saved.DiagramType · @_savedLabel(saved)</option>
+                        }
+                    </InputSelect>
+                </div>
+                <button class="btn btn-outline-primary" type="button" disabled="@(_isBusy || string.IsNullOrWhiteSpace(_selectedSnapshotId))" @onclick="LoadSnapshotAsync">
+                    Abrir snapshot
+                </button>
+            </div>
+        }
+    </div>
+
+    @if (_diagram is not null)
+    {
+        <article class="diagram-preview" aria-live="polite">
+            <h3>@_diagram.Title</h3>
+            <p>
+                Estado: @_diagram.Status · revisão @_diagram.ProjectRevision ·
+                fingerprint <code>@_diagram.SourceFingerprint</code>
+            </p>
+            @if (_diagram.Status == ArchitecturalDiagramStatus.Stale)
+            {
+                <p class="alert alert-warning" role="status">Este snapshot é histórico e não representa a revisão atual do projeto.</p>
+            }
+            @if (_diagram.Warnings.Count > 0)
+            {
+                <div class="alert alert-warning" role="status">
+                    <strong>Modelo incompleto</strong>
+                    <ul>
+                        @foreach (var warning in _diagram.Warnings)
+                        {
+                            <li>@warning</li>
+                        }
+                    </ul>
+                </div>
+            }
+
+            <h4>Elementos</h4>
+            <ul class="diagram-node-list" aria-label="Nós do diagrama">
+                @foreach (var element in _diagram.Elements)
+                {
+                    <li>
+                        <strong>@element.Name</strong>
+                        <span>@element.ElementType · @element.Status</span>
+                        @if (!string.IsNullOrWhiteSpace(element.Description))
+                        {
+                            <span>@element.Description</span>
+                        }
+                        @if (element.Technology is not null)
+                        {
+                            <span>Tecnologia: @element.Technology</span>
+                        }
+                        <small>ID <code>@element.Id</code></small>
+                    </li>
+                }
+            </ul>
+
+            <h4>Interações direcionadas</h4>
+            @if (_diagram.Connections.Count == 0)
+            {
+                <p>Nenhuma interação explícita neste escopo.</p>
+            }
+            else
+            {
+                <ul class="diagram-connection-list" aria-label="Arestas direcionadas do diagrama">
+                    @foreach (var connection in _diagram.Connections)
+                    {
+                        <li>
+                            <code>@connection.SourceId</code>
+                            <span aria-hidden="true">→</span>
+                            <code>@connection.TargetId</code>
+                            <span>@connection.Description · @connection.InteractionType · @connection.Status</span>
+                        </li>
+                    }
+                </ul>
+            }
+
+            @if (IsCurrentPreview)
+            {
+                <div class="diagram-layout-editor">
+                    <h4>Layout (apresentação)</h4>
+                    <p>Posições e fronteiras recolhidas não alteram elementos, conexões ou decisões.</p>
+                    @foreach (var position in _positions)
+                    {
+                        <div class="form-row" @key="position.ElementId">
+                            <label>@position.Name <code>@position.ElementId</code></label>
+                            <div class="field">
+                                <label for="@("x-" + position.ElementId)">X</label>
+                                <InputNumber id="@("x-" + position.ElementId)" class="form-control" @bind-Value="position.X" />
+                            </div>
+                            <div class="field">
+                                <label for="@("y-" + position.ElementId)">Y</label>
+                                <InputNumber id="@("y-" + position.ElementId)" class="form-control" @bind-Value="position.Y" />
+                            </div>
+                            @if (position.IsBoundary)
+                            {
+                                <div class="field">
+                                    <label for="@("collapsed-" + position.ElementId)">Fronteira recolhida</label>
+                                    <InputCheckbox id="@("collapsed-" + position.ElementId)" @bind-Value="position.IsCollapsed" />
+                                </div>
+                            }
+                        </div>
+                    }
+                    <button class="btn btn-outline-primary" type="button" disabled="@_isBusy" @onclick="SaveLayoutAsync">
+                        Salvar layout
+                    </button>
+                </div>
+            }
+        </article>
+    }
+</section>
+
+@code {
+    private readonly List<string> _errors = [];
+    private readonly List<string> _layoutWarnings = [];
+    private ArchitecturalDiagramType _diagramType = ArchitecturalDiagramType.Context;
+    private string? _scopeId;
+    private ArchitecturalDiagram? _diagram;
+    private IReadOnlyList<ArchitecturalDiagram> _savedDiagrams = Array.Empty<ArchitecturalDiagram>();
+    private readonly List<LayoutPositionForm> _positions = [];
+    private string? _selectedSnapshotId;
+    private bool _isBusy;
+    private string? _notice;
+    private CancellationTokenSource? _previewCancellation;
+    private long _previewRequest;
+    private Guid? _lastProjectId;
+    private long _lastProjectRevision = -1;
+
+    [Parameter, EditorRequired]
+    public ProjectView Project { get; set; } = null!;
+
+    private IEnumerable<StructuralElementView> AvailableScopes =>
+        Project.StructuralElements.Where(element => element.Type ==
+            (_diagramType == ArchitecturalDiagramType.Component
+                ? StructuralElementType.Container
+                : StructuralElementType.SoftwareSystem));
+
+    private bool IsCurrentPreview =>
+        _diagram is not null &&
+        _diagram.Status != ArchitecturalDiagramStatus.Stale &&
+        _diagram.ProjectId == Project.Id &&
+        long.TryParse(_diagram.ProjectRevision, out var revision) &&
+        revision == Project.Revision &&
+        _diagram.DiagramType == _diagramType &&
+        _diagram.ScopeId == _scopeId;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        var projectChanged = _lastProjectId != Project.Id || _lastProjectRevision != Project.Revision;
+        if (!AvailableScopes.Any(scope => scope.Id == _scopeId))
+        {
+            _scopeId = AvailableScopes.FirstOrDefault()?.Id;
+        }
+
+        if (projectChanged)
+        {
+            _lastProjectId = Project.Id;
+            _lastProjectRevision = Project.Revision;
+            await RefreshSavedDiagramsAsync();
+            if (!string.IsNullOrWhiteSpace(_scopeId))
+            {
+                await GeneratePreviewAsync(debounce: true);
+            }
+        }
+        else if (_diagram is not null && !IsCurrentPreview)
+        {
+            _diagram = _diagram with { Status = ArchitecturalDiagramStatus.Stale };
+            _positions.Clear();
+        }
+    }
+
+    private async Task OnDiagramInputsChangedAsync()
+    {
+        if (!AvailableScopes.Any(scope => scope.Id == _scopeId))
+        {
+            _scopeId = AvailableScopes.FirstOrDefault()?.Id;
+        }
+
+        await GeneratePreviewAsync();
+    }
+
+    private Task GeneratePreviewAsync() => GeneratePreviewAsync(debounce: false);
+
+    private async Task GeneratePreviewAsync(bool debounce)
+    {
+        _previewCancellation?.Cancel();
+        var cancellation = new CancellationTokenSource();
+        _previewCancellation = cancellation;
+        var request = Interlocked.Increment(ref _previewRequest);
+        var projectId = Project.Id;
+        var revision = Project.Revision;
+        var diagramType = _diagramType;
+        var scopeId = _scopeId;
+        _errors.Clear();
+        _layoutWarnings.Clear();
+        _notice = null;
+        _isBusy = true;
+
+        try
+        {
+            if (debounce)
+            {
+                await Task.Delay(TimeSpan.FromMilliseconds(150), cancellation.Token);
+            }
+
+            if (string.IsNullOrWhiteSpace(scopeId))
+            {
+                _diagram = null;
+                return;
+            }
+
+            var result = await Sender.Send(
+                new GetArchitecturalDiagramQuery(projectId, diagramType, scopeId),
+                cancellation.Token);
+            if (request != _previewRequest || cancellation.IsCancellationRequested)
+            {
+                return;
+            }
+
+            if (!result.TryGetValue(out var diagram))
+            {
+                _errors.AddRange(result.Errors.Select(error => error.Message));
+                return;
+            }
+
+            if (Project.Id != projectId || Project.Revision != revision ||
+                _diagramType != diagramType || _scopeId != scopeId)
+            {
+                return;
+            }
+
+            _diagram = diagram;
+            var layoutResult = await Sender.Send(
+                new GetArchitecturalDiagramLayoutQuery(projectId, diagramType, scopeId),
+                cancellation.Token);
+            if (request != _previewRequest || cancellation.IsCancellationRequested)
+            {
+                return;
+            }
+
+            if (!layoutResult.TryGetValue(out var layoutResultValue))
+            {
+                _errors.AddRange(layoutResult.Errors.Select(error => error.Message));
+                _positions.Clear();
+                return;
+            }
+
+            _layoutWarnings.Clear();
+            if (layoutResultValue.OrphanedElementIds.Count > 0)
+            {
+                _layoutWarnings.Add(
+                    $"Overrides órfãos precisam de revisão antes de serem descartados: {string.Join(", ", layoutResultValue.OrphanedElementIds)}.");
+            }
+
+            InitializePositionForms(diagram, layoutResultValue.Layout);
+        }
+        catch (OperationCanceledException) when (cancellation.IsCancellationRequested)
+        {
+        }
+        finally
+        {
+            if (request == _previewRequest)
+            {
+                _isBusy = false;
+            }
+
+            cancellation.Dispose();
+        }
+    }
+
+    private async Task SaveSnapshotAsync()
+    {
+        if (!IsCurrentPreview || _diagram is null)
+        {
+            return;
+        }
+
+        _errors.Clear();
+        _notice = null;
+        _isBusy = true;
+        try
+        {
+            var result = await Sender.Send(new SaveArchitecturalDiagramSnapshotCommand(
+                Project.Id,
+                _diagramType,
+                _scopeId ?? string.Empty,
+                _diagram.SourceFingerprint));
+            if (!result.TryGetValue(out var saved))
+            {
+                _errors.AddRange(result.Errors.Select(error => error.Message));
+                return;
+            }
+
+            _diagram = saved;
+            await RefreshSavedDiagramsAsync();
+            _notice = $"Snapshot salvo: {saved.DiagramId} · {saved.SourceFingerprint}.";
+        }
+        finally
+        {
+            _isBusy = false;
+        }
+    }
+
+    private async Task SaveLayoutAsync()
+    {
+        if (!IsCurrentPreview || _diagram is null)
+        {
+            return;
+        }
+
+        _errors.Clear();
+        _notice = null;
+        _isBusy = true;
+        try
+        {
+            var result = await Sender.Send(new SaveArchitecturalDiagramLayoutCommand(
+                Project.Id,
+                _diagramType,
+                _scopeId ?? string.Empty,
+                _diagram.SourceFingerprint,
+                _positions.Select(position => new DiagramElementPosition(
+                    position.ElementId,
+                    position.X,
+                    position.Y)).ToArray(),
+                _positions.Where(position => position.IsCollapsed)
+                    .Select(position => position.ElementId).ToArray()));
+            if (!result.TryGetValue(out var layout))
+            {
+                _errors.AddRange(result.Errors.Select(error => error.Message));
+                return;
+            }
+
+            _notice = "Layout salvo separadamente do snapshot semântico.";
+        }
+        finally
+        {
+            _isBusy = false;
+        }
+    }
+
+    private async Task RefreshSavedDiagramsAsync()
+    {
+        var result = await Sender.Send(new ListArchitecturalDiagramSnapshotsQuery(Project.Id));
+        if (!result.TryGetValue(out var snapshots))
+        {
+            _errors.AddRange(result.Errors.Select(error => error.Message));
+            _savedDiagrams = Array.Empty<ArchitecturalDiagram>();
+            return;
+        }
+
+        _savedDiagrams = snapshots;
+        if (!_savedDiagrams.Any(snapshot => snapshot.DiagramId == _selectedSnapshotId))
+        {
+            _selectedSnapshotId = _savedDiagrams.FirstOrDefault()?.DiagramId;
+        }
+    }
+
+    private async Task LoadSnapshotAsync()
+    {
+        if (string.IsNullOrWhiteSpace(_selectedSnapshotId))
+        {
+            return;
+        }
+
+        _previewRequest++;
+        _previewCancellation?.Cancel();
+        _errors.Clear();
+        _notice = null;
+        _isBusy = true;
+        try
+        {
+            var result = await Sender.Send(new LoadArchitecturalDiagramSnapshotQuery(
+                Project.Id,
+                _selectedSnapshotId));
+            if (!result.TryGetValue(out var snapshot))
+            {
+                _errors.AddRange(result.Errors.Select(error => error.Message));
+                return;
+            }
+
+            _diagramType = snapshot.DiagramType;
+            _scopeId = snapshot.ScopeId;
+            _diagram = snapshot with
+            {
+                Status = snapshot.ProjectRevision == Project.Revision.ToString(CultureInfo.InvariantCulture)
+                    ? snapshot.Status
+                    : ArchitecturalDiagramStatus.Stale
+            };
+            _positions.Clear();
+            _notice = "Snapshot salvo aberto; uma revisão antiga permanece identificada como histórica.";
+        }
+        finally
+        {
+            _isBusy = false;
+        }
+    }
+
+    private void InitializePositionForms(
+        ArchitecturalDiagram diagram,
+        ArchitecturalDiagramLayout layout)
+    {
+        var savedPositions = layout.Positions.ToDictionary(position => position.ElementId, StringComparer.Ordinal);
+        var collapsed = layout.CollapsedBoundaryIds.ToHashSet(StringComparer.Ordinal);
+        _positions.Clear();
+        _positions.AddRange(diagram.Elements.Select(element =>
+        {
+            savedPositions.TryGetValue(element.Id, out var position);
+            return new LayoutPositionForm(
+                element.Id,
+                element.Name,
+                position?.X ?? 0,
+                position?.Y ?? 0,
+                element.ElementType is "SoftwareSystem" or "Container",
+                collapsed.Contains(element.Id));
+        }));
+    }
+
+    private string _savedLabel(ArchitecturalDiagram snapshot) =>
+        $"{snapshot.Title} · rev. {snapshot.ProjectRevision} · {snapshot.GeneratedAt.ToLocalTime():g}";
+
+    public void Dispose()
+    {
+        _previewCancellation?.Cancel();
+        _previewCancellation?.Dispose();
+    }
+
+    private sealed class LayoutPositionForm(
+        string elementId,
+        string name,
+        decimal x,
+        decimal y,
+        bool isBoundary,
+        bool isCollapsed)
+    {
+        public string ElementId { get; } = elementId;
+        public string Name { get; } = name;
+        public decimal X { get; set; } = x;
+        public decimal Y { get; set; } = y;
+        public bool IsBoundary { get; } = isBoundary;
+        public bool IsCollapsed { get; set; } = isCollapsed;
+    }
+}

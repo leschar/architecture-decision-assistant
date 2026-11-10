@@ -1,0 +1,34 @@
+Atue como especialista em DDD.
+
+Com base no seguinte produto:
+
+[COLE A VISÃO GERADA NA ETAPA 1]
+
+Crie o modelo de domínio completo.
+
+Identifique:
+
+- Bounded Contexts
+- Agregados
+- Entidades
+- Value Objects
+- Serviços de Domínio
+- Eventos de Domínio
+- Casos de uso
+
+O sistema deve suportar:
+
+- Arquiteturas
+- Tecnologias
+- Patterns
+- Princípios
+- Dependências
+- Regras
+- Scores
+- Diagramas
+- ADRs
+- Projetos
+
+Gere diagramas verbais do domínio.
+
+Explique cada entidade detalhadamente.

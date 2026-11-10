@@ -1,0 +1,61 @@
+ETAPA 07 — GRAFO DE CONHECIMENTO E DEPENDÊNCIAS
+
+## Objetivo
+
+Modelar um grafo determinístico e explicável entre itens Architecture, Pattern
+e Technology, para analisar dependências, recomendações contextuais, conflitos
+e alternativas. O grafo não escolhe nem altera arquitetura e não substitui
+regras, requisitos confirmados ou decisão humana.
+
+## Revisão crítica do pedido original
+
+- Manter os quatro tipos canônicos existentes: `DependsOn`, `Recommends`,
+  `ConflictsWith` e `AlternativeTo`.
+- Não criar `Requires`: é redundante com `DependsOn`. Migrar dados legados só
+  depois de verificar que a relação é realmente obrigatória.
+- Não presumir que Microservices exige API Gateway, que Saga exige broker, que
+  Outbox exige um broker específico ou que Kafka exige Event Driven. São
+  associações contextuais a revisar; não hard dependencies universais.
+- Não converter `supports` em aresta sem definir sua semântica.
+
+## Modelo e contratos
+
+Detalhes, algoritmos, semântica, trade-offs, exemplo JSON e aceite estão em
+`docs/graph-dependency-model.md`.
+
+- Os nós iniciais são itens de Architecture, Pattern e Technology.
+- Relações são declaradas no item de origem com `targetId` e justificativa.
+- `DependsOn` é direcionada; `Recommends` é sugestão, não dependência nem
+  pontuação. `ConflictsWith` e `AlternativeTo` são simétricas na projeção,
+  sem duplicar declarações persistidas.
+- `appliesWhen`, quando presente, reutiliza a DSL de fatos e lógica de três
+  valores do motor de regras. `Unknown` não é verdadeiro.
+- `conditions` textual legado não é executável.
+- A análise fixa versões/hashes, preserva caminhos e proveniência, detecta
+  ciclos e relações inválidas, e reporta limites/truncamento.
+- Expansão automática percorre transitivamente somente dependências aplicáveis.
+  Recomendações, alternativas e conflitos não geram expansão recursiva
+  automática nem seleção.
+- Ausência de dependência gera estado incompleto/missing e sugestão de revisão;
+  não instala/seleciona nó nem escolhe entre alternativas.
+- O grafo não gera score por vizinhança, grau ou popularidade. Ranking é
+  responsabilidade do motor de regras, com critérios explícitos.
+
+## Critérios de aceite
+
+1. Semântica e direção de cada tipo de relação estão documentadas.
+2. Referências quebradas, ciclos de dependência, autorrelações e duplicatas
+   têm diagnóstico acionável e não são ignorados.
+3. Expansão e conflito tratam `Unknown` sem assumir condição verdadeira.
+4. Caminhos explicam dependências transitivas; relações simétricas podem ser
+   consultadas nos dois sentidos sem duplicação no catálogo.
+5. Resultado é determinístico para mesmas versões/entradas, preserva
+   proveniência e não altera as seleções do projeto.
+6. JSON válido pode estender o catálogo sem recompilar; JSON inválido não
+   publica grafo parcial.
+7. Testes cobrem dependência direta/transitiva, ciclos, dependência ausente,
+   condição verdadeira/falsa/desconhecida, conflito, alternativa, relações
+   recíprocas e limites operacionais.
+
+Esta etapa é de especificação/modelagem. Não implementar a aplicação ou o
+algoritmo de runtime nesta etapa.

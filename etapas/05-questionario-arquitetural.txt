@@ -1,0 +1,30 @@
+Atue como arquiteto enterprise.
+
+Crie um questionário arquitetural capaz de determinar a melhor arquitetura possível para um sistema.
+
+Organize as perguntas por categorias.
+
+Categorias:
+
+- Negócio
+- Usuários
+- Escalabilidade
+- Disponibilidade
+- Observabilidade
+- Equipe
+- Infraestrutura
+- Segurança
+- Integrações
+- Dados
+- Performance
+- Cloud
+- Governança
+
+Para cada pergunta informe:
+
+- Objetivo
+- Impacto arquitetural
+- Tecnologias que podem ser afetadas
+- Peso da resposta
+
+Produza pelo menos 150 perguntas.

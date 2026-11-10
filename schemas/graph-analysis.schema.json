@@ -1,0 +1,177 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Knowledge graph analysis result",
+  "description": "Immutable, explainable snapshot of graph expansion for an identified project and knowledge catalog.",
+  "type": "object",
+  "required": [
+    "schemaVersion",
+    "graphAnalysisId",
+    "snapshot",
+    "roots",
+    "nodes",
+    "relations",
+    "truncated",
+    "warnings"
+  ],
+  "properties": {
+    "schemaVersion": { "const": "1.0" },
+    "graphAnalysisId": { "type": "string", "minLength": 1 },
+    "snapshot": {
+      "type": "object",
+      "required": [
+        "projectRevision",
+        "catalogHash",
+        "graphPolicyVersion",
+        "engineVersion",
+        "evaluatedAt"
+      ],
+      "properties": {
+        "projectRevision": { "type": "string", "minLength": 1 },
+        "catalogHash": { "type": "string", "minLength": 1 },
+        "graphPolicyVersion": {
+          "type": "string",
+          "pattern": "^\\d+\\.\\d+\\.\\d+$"
+        },
+        "engineVersion": {
+          "type": "string",
+          "pattern": "^\\d+\\.\\d+\\.\\d+$"
+        },
+        "evaluatedAt": { "type": "string", "format": "date-time" }
+      },
+      "additionalProperties": false
+    },
+    "roots": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/root" }
+    },
+    "nodes": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/node" }
+    },
+    "relations": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/relationFinding" }
+    },
+    "truncated": { "type": "boolean" },
+    "warnings": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    }
+  },
+  "$defs": {
+    "itemId": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+    },
+    "relationKey": {
+      "type": "string",
+      "minLength": 1
+    },
+    "root": {
+      "type": "object",
+      "required": ["itemId", "role"],
+      "properties": {
+        "itemId": { "$ref": "#/$defs/itemId" },
+        "role": {
+          "type": "string",
+          "enum": [
+            "ConfirmedSelection",
+            "RecommendationCandidate",
+            "ExplicitExploration"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "node": {
+      "type": "object",
+      "required": ["itemId", "kind", "roles", "version"],
+      "properties": {
+        "itemId": { "$ref": "#/$defs/itemId" },
+        "kind": {
+          "type": "string",
+          "enum": ["Architecture", "Pattern", "Technology"]
+        },
+        "roles": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "enum": [
+              "Root",
+              "Required",
+              "Suggested",
+              "Alternative",
+              "Conflict"
+            ]
+          }
+        },
+        "version": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$" }
+      },
+      "additionalProperties": false
+    },
+    "relationFinding": {
+      "type": "object",
+      "required": [
+        "relationKey",
+        "sourceId",
+        "targetId",
+        "type",
+        "sourceVersion",
+        "targetVersion",
+        "applicability",
+        "finding",
+        "rationale",
+        "pathFromRoot",
+        "unknownFacts"
+      ],
+      "properties": {
+        "relationKey": { "$ref": "#/$defs/relationKey" },
+        "sourceId": { "$ref": "#/$defs/itemId" },
+        "targetId": { "$ref": "#/$defs/itemId" },
+        "type": {
+          "type": "string",
+          "enum": ["DependsOn", "Recommends", "ConflictsWith", "AlternativeTo"]
+        },
+        "sourceVersion": {
+          "type": "string",
+          "pattern": "^\\d+\\.\\d+\\.\\d+$"
+        },
+        "targetVersion": {
+          "type": "string",
+          "pattern": "^\\d+\\.\\d+\\.\\d+$"
+        },
+        "applicability": {
+          "type": "string",
+          "enum": ["Applicable", "NotApplicable", "Unknown", "NotEvaluated"]
+        },
+        "finding": {
+          "type": "string",
+          "enum": [
+            "Satisfied",
+            "Missing",
+            "Suggested",
+            "Relevant",
+            "Conflict",
+            "Alternative",
+            "Unknown",
+            "NotEvaluated"
+          ]
+        },
+        "rationale": { "type": "string", "minLength": 1 },
+        "relationSource": { "type": "string", "minLength": 1 },
+        "pathFromRoot": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/relationKey" }
+        },
+        "unknownFacts": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

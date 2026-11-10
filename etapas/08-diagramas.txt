@@ -1,0 +1,76 @@
+ETAPA 08 — GERAÇÃO DE DIAGRAMAS C4
+
+## Objetivo
+
+Especificar a projeção determinística do modelo do projeto em Context,
+Container e Component diagrams. Diagramas são artefatos versionados,
+explicáveis e editáveis; não são fonte de verdade nem decisões automáticas.
+
+## Restrições
+
+- Não usar IA em runtime, modelos generativos ou serviços OpenAI/Azure OpenAI.
+- Gerar somente topologia sustentada por estrutura explícita, fatos
+  confirmados, decisões humanas e relações cuja semântica seja aplicável.
+- Não converter recomendação, score, relação DependsOn ou tag lexical pendente
+  em conexão de runtime sem evidência estrutural.
+- Não inventar pessoas, sistemas, containers, componentes, protocolos ou
+  eventos. Nível sem dados suficientes permanece incompleto, com lacunas
+  apresentadas ao usuário.
+- Manter geração, validação e regras de negócio em Application/Domain; a UI
+  apresenta preview e encaminha revisões.
+- Persistir projeto, modelo semântico e layout em JSON local; sem banco.
+
+## Vistas
+
+- **Context:** pessoas/papéis, sistema em escopo e sistemas externos.
+- **Container:** unidades executáveis/deployáveis e armazenamentos dentro do
+  sistema, com atores/sistemas externos relevantes.
+- **Component:** decomposição explícita de um container em componentes internos
+  e suas dependências.
+
+Arquitetura selecionada não revela automaticamente número ou limites de
+serviços; um Component Diagram exige decomposição explícita. A especificação
+detalhada, hierarquia das fontes, algoritmos, fluxo em tempo real, persistência,
+trade-offs e aceite está em `docs/diagram-generation.md`.
+
+## Nós e conexões
+
+Nós usam conceitos C4 `Person`, `SoftwareSystem`, `Container` e `Component`,
+com estado `Confirmed`, `Proposed` ou `Unresolved`, identidade estável e
+proveniência. Especializações como database, queue ou tópico são tags/
+metadados, não novos níveis C4.
+
+Conexões direcionadas têm tipo `Synchronous`, `AsynchronousCommand`,
+`AsynchronousEvent`, `BatchTransfer` ou `Unknown`. Eventos são rótulos
+explícitos nas conexões assíncronas; não criam broker ou nó automaticamente.
+Protocolo, ordem, retentativas e garantias só aparecem quando conhecidos.
+
+Requisitos confirmados, regras e relações contribuem contexto ou proveniência;
+somente a estrutura/decisão explícita define topologia. Conteúdo proposto deve
+ser visualmente distinto do confirmado.
+
+## Atualização reativa
+
+“Em tempo real” significa preview reativo em sessão: alterações relevantes
+disparam cálculo determinístico em segundo plano; edições sucessivas podem ser
+coalescidas; resultados são vinculados a revisão/hash; resultados atrasados
+não substituem snapshots mais novos. Não significa persistir/renderizar a cada
+tecla, nem é promessa de latência rígida antes de avaliação de desempenho.
+
+Edição de layout não muda o modelo semântico. Salvar/publicar snapshots é
+explícito; erros, defasagem, incompletude e truncamento são visíveis.
+
+## Contratos e critérios de aceite
+
+- `schemas/diagram.schema.json`: contrato do snapshot semântico C4 e layout
+  desacoplado.
+- `docs/diagram-generation.md`: modelo completo e critérios verificáveis.
+
+Aceitar quando: três níveis mantêm abstrações separadas; mesmos inputs/
+versões geram mesmos elementos, conexões e ordenação; cada elemento e conexão
+tem proveniência; proposta e confirmação são distintas; nível incompleto não é
+inventado; preview defasado não substitui revisão atual; e layout não altera
+decisões ou topologia.
+
+Esta etapa é de especificação/modelagem. Não implementar renderizador ou
+gerador de runtime nesta etapa.

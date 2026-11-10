@@ -1,0 +1,29 @@
+{
+  "id": "cqrs",
+  "kind": "Pattern",
+  "schemaVersion": "1.0",
+  "version": "1.0.0",
+  "name": "CQRS",
+  "description": "Pattern que separa os modelos ou caminhos de leitura e escrita quando suas necessidades justificam tratamentos distintos.",
+  "category": "Application",
+  "problem": "Um único modelo de acesso pode dificultar a evolução de operações de leitura e escrita com necessidades diferentes.",
+  "solution": "Separar responsabilidades de comandos e consultas, mantendo explícito como os dados são atualizados e lidos.",
+  "benefits": [
+    "Permite otimizar leitura e escrita de forma independente quando necessário.",
+    "Pode tornar mais explícitas as operações que alteram estado."
+  ],
+  "risks": [
+    "Adiciona modelos, código e caminhos de manutenção.",
+    "Separação física pode exigir consistência eventual e sincronização.",
+    "Aplicação sem necessidade clara pode ficar desnecessariamente complexa."
+  ],
+  "complexity": 7,
+  "useWhen": [
+    "Leituras e escritas têm requisitos materialmente diferentes.",
+    "A complexidade adicional tem benefício mensurável para o domínio."
+  ],
+  "avoidWhen": [
+    "Um único modelo simples atende aos requisitos.",
+    "A equipe não precisa ou não consegue operar a duplicação e sincronização de modelos."
+  ]
+}

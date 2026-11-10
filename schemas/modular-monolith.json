@@ -1,0 +1,43 @@
+{
+  "id": "modular-monolith",
+  "kind": "Architecture",
+  "schemaVersion": "1.0",
+  "version": "1.0.0",
+  "name": "Modular Monolith",
+  "description": "Aplicação implantada como uma única unidade, organizada em módulos com responsabilidades e limites explícitos.",
+  "category": "Modular",
+  "tags": ["modularity", "single-deployment"],
+  "advantages": [
+    "Mantém a simplicidade operacional de uma implantação única.",
+    "Limites entre módulos podem reduzir acoplamento e apoiar evolução incremental.",
+    "Permite avaliar limites de domínio antes de eventual distribuição."
+  ],
+  "disadvantages": [
+    "A implantação e a escala continuam associadas à aplicação como um todo.",
+    "Os limites dependem de disciplina e mecanismos para evitar acoplamento entre módulos."
+  ],
+  "useWhen": [
+    "É importante modularizar sem assumir de início operação distribuída.",
+    "Os limites de domínio estão em evolução e devem ser validados."
+  ],
+  "avoidWhen": [
+    "Há necessidade comprovada de implantação independente por capacidade.",
+    "A plataforma ou organização não consegue impor limites modulares no código."
+  ],
+  "complexity": 5,
+  "scalability": 6,
+  "relations": [
+    {
+      "type": "AlternativeTo",
+      "targetId": "monolith",
+      "rationale": "Ambos mantêm uma unidade de implantação; o monólito modular explicita limites internos.",
+      "conditions": ["A comparação considera o grau de modularidade interna."]
+    },
+    {
+      "type": "AlternativeTo",
+      "targetId": "microservices",
+      "rationale": "Pode atender à necessidade de modularidade sem introduzir implantação e comunicação distribuídas.",
+      "conditions": ["Autonomia de implantação por módulo ainda não é necessária."]
+    }
+  ]
+}

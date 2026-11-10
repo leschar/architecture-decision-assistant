@@ -1,0 +1,35 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\ArchitectureAssistant.Application\ArchitectureAssistant.Application.csproj" />
+    <ProjectReference Include="..\ArchitectureAssistant.Domain\ArchitectureAssistant.Domain.csproj" />
+    <ProjectReference Include="..\ArchitectureAssistant.KnowledgeBase\ArchitectureAssistant.KnowledgeBase.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="JsonSchema.Net" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="..\..\schemas\project.schema.json"
+                      Link="Schemas\project.schema.json" />
+    <EmbeddedResource Include="..\..\schemas\knowledge-item.schema.json"
+                      LogicalName="ArchitectureAssistant.Infrastructure.Schemas.knowledge-item.schema.json" />
+    <EmbeddedResource Include="..\..\schemas\analysis-snapshot.schema.json"
+                      LogicalName="ArchitectureAssistant.Infrastructure.Schemas.analysis-snapshot.schema.json" />
+    <EmbeddedResource Include="..\..\schemas\diagram.schema.json"
+                      LogicalName="ArchitectureAssistant.Infrastructure.Schemas.diagram.schema.json" />
+    <EmbeddedResource Include="..\..\schemas\diagram-layout.schema.json"
+                      LogicalName="ArchitectureAssistant.Infrastructure.Schemas.diagram-layout.schema.json" />
+    <EmbeddedResource Include="..\..\schemas\adr.schema.json"
+                      LogicalName="ArchitectureAssistant.Infrastructure.Schemas.adr.schema.json" />
+    <EmbeddedResource Include="..\..\schemas\historical-project.schema.json"
+                      LogicalName="ArchitectureAssistant.Infrastructure.Schemas.historical-project.schema.json" />
+    <EmbeddedResource Include="..\..\schemas\history-index.schema.json"
+                      LogicalName="ArchitectureAssistant.Infrastructure.Schemas.history-index.schema.json" />
+    <EmbeddedResource Include="..\..\schemas\history-similarity-policy.schema.json"
+                      LogicalName="ArchitectureAssistant.Infrastructure.Schemas.history-similarity-policy.schema.json" />
+  </ItemGroup>
+
+</Project>

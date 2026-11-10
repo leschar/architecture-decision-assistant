@@ -1,0 +1,385 @@
+@using System.ComponentModel.DataAnnotations
+@using ArchitectureAssistant.Application.Projects
+@using ArchitectureAssistant.Domain.Projects
+@using MediatR
+@inject ISender Sender
+
+<section class="panel" aria-labelledby="structure-heading">
+    <div class="panel-heading">
+        <div>
+            <p class="eyebrow">ESTRUTURA EXPLÍCITA</p>
+            <h2 id="structure-heading">Elementos e interações</h2>
+        </div>
+        <span class="count-badge">@_elements.Count</span>
+    </div>
+    <p>Registre somente estrutura conhecida. Itens propostos ou não resolvidos não representam arquitetura confirmada.</p>
+
+    @if (_errors.Count > 0)
+    {
+        <div class="alert alert-danger" role="alert">
+            <ul class="mb-0">
+                @foreach (var error in _errors)
+                {
+                    <li>@error</li>
+                }
+            </ul>
+        </div>
+    }
+
+    @if (!string.IsNullOrWhiteSpace(_notice))
+    {
+        <p role="status">@_notice</p>
+    }
+
+    <h3>Elementos</h3>
+    @if (_elements.Count == 0)
+    {
+        <p class="empty-state">Nenhum elemento estrutural foi registrado.</p>
+    }
+    else
+    {
+        <ul class="requirement-list">
+            @foreach (var element in _elements)
+            {
+                <li>
+                    <strong>@element.Name</strong> · @element.Type · @element.Status
+                    <span> · ID: <code>@element.Id</code></span>
+                    @if (element.ParentId is not null)
+                    {
+                        <span> · elemento pai: <code>@element.ParentId</code></span>
+                    }
+                    @if (element.Description is not null)
+                    {
+                        <p>@element.Description</p>
+                    }
+                    <div class="button-row">
+                        @foreach (var status in Enum.GetValues<StructuralElementStatus>().Where(status => status != element.Status))
+                        {
+                            <button class="btn btn-sm btn-outline-secondary" type="button" disabled="@_isBusy"
+                                    @onclick="() => ChangeElementStatusAsync(element.Id, status)">
+                                Marcar @status
+                            </button>
+                        }
+                    </div>
+                </li>
+            }
+        </ul>
+    }
+
+    <details>
+        <summary>Adicionar elemento</summary>
+        <EditForm Model="_newElement" OnValidSubmit="AddElementAsync">
+            <DataAnnotationsValidator />
+            <div class="form-row">
+                <div class="field">
+                    <label for="structure-element-id">ID estável</label>
+                    <InputText id="structure-element-id" class="form-control" @bind-Value="_newElement.Id" />
+                    <ValidationMessage For="() => _newElement.Id" />
+                </div>
+                <div class="field">
+                    <label for="structure-element-name">Nome</label>
+                    <InputText id="structure-element-name" class="form-control" @bind-Value="_newElement.Name" />
+                    <ValidationMessage For="() => _newElement.Name" />
+                </div>
+                <div class="field">
+                    <label for="structure-element-type">Tipo</label>
+                    <InputSelect id="structure-element-type" class="form-select" @bind-Value="_newElement.Type">
+                        @foreach (var type in Enum.GetValues<StructuralElementType>())
+                        {
+                            <option value="@type">@type</option>
+                        }
+                    </InputSelect>
+                </div>
+                @if (ParentTypes.ContainsKey(_newElement.Type))
+                {
+                    <div class="field">
+                        <label for="structure-parent">Elemento pai</label>
+                        <InputSelect id="structure-parent" class="form-select" @bind-Value="_newElement.ParentId">
+                            <option value="">Selecione</option>
+                            @foreach (var parent in _elements.Where(element => element.Type == ParentTypes[_newElement.Type]))
+                            {
+                                <option value="@parent.Id">@parent.Name (@parent.Id)</option>
+                            }
+                        </InputSelect>
+                    </div>
+                }
+                <div class="field">
+                    <label for="structure-element-status">Estado</label>
+                    <InputSelect id="structure-element-status" class="form-select" @bind-Value="_newElement.Status">
+                        @foreach (var status in Enum.GetValues<StructuralElementStatus>())
+                        {
+                            <option value="@status">@status</option>
+                        }
+                    </InputSelect>
+                </div>
+            </div>
+            <div class="field">
+                <label for="structure-element-description">Descrição (opcional)</label>
+                <InputText id="structure-element-description" class="form-control" @bind-Value="_newElement.Description" />
+            </div>
+            <button class="btn btn-outline-primary" type="submit" disabled="@_isBusy">Adicionar elemento</button>
+        </EditForm>
+    </details>
+
+    <h3>Interações direcionadas</h3>
+    @if (_connections.Count == 0)
+    {
+        <p class="empty-state">Nenhuma interação foi registrada.</p>
+    }
+    else
+    {
+        <ul class="requirement-list">
+            @foreach (var connection in _connections)
+            {
+                <li>
+                    <strong>@connection.Description</strong> · @connection.InteractionType · @connection.Status
+                    <p><code>@connection.SourceId</code> → <code>@connection.TargetId</code></p>
+                    <div class="button-row">
+                        @foreach (var status in Enum.GetValues<StructuralElementStatus>().Where(status => status != connection.Status))
+                        {
+                            <button class="btn btn-sm btn-outline-secondary" type="button" disabled="@_isBusy"
+                                    @onclick="() => ChangeConnectionStatusAsync(connection.Id, status)">
+                                Marcar @status
+                            </button>
+                        }
+                    </div>
+                </li>
+            }
+        </ul>
+    }
+
+    <details>
+        <summary>Adicionar interação</summary>
+        <EditForm Model="_newConnection" OnValidSubmit="AddConnectionAsync">
+            <DataAnnotationsValidator />
+            <div class="form-row">
+                <div class="field">
+                    <label for="structure-connection-id">ID estável</label>
+                    <InputText id="structure-connection-id" class="form-control" @bind-Value="_newConnection.Id" />
+                    <ValidationMessage For="() => _newConnection.Id" />
+                </div>
+                <div class="field">
+                    <label for="structure-connection-source">Origem</label>
+                    <InputSelect id="structure-connection-source" class="form-select" @bind-Value="_newConnection.SourceId">
+                        <option value="">Selecione</option>
+                        @foreach (var element in _elements)
+                        {
+                            <option value="@element.Id">@element.Name (@element.Id)</option>
+                        }
+                    </InputSelect>
+                </div>
+                <div class="field">
+                    <label for="structure-connection-target">Destino</label>
+                    <InputSelect id="structure-connection-target" class="form-select" @bind-Value="_newConnection.TargetId">
+                        <option value="">Selecione</option>
+                        @foreach (var element in _elements)
+                        {
+                            <option value="@element.Id">@element.Name (@element.Id)</option>
+                        }
+                    </InputSelect>
+                </div>
+                <div class="field">
+                    <label for="structure-interaction-type">Tipo de interação</label>
+                    <InputSelect id="structure-interaction-type" class="form-select" @bind-Value="_newConnection.InteractionType">
+                        @foreach (var type in Enum.GetValues<StructuralInteractionType>())
+                        {
+                            <option value="@type">@type</option>
+                        }
+                    </InputSelect>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="field">
+                    <label for="structure-connection-description">Descrição</label>
+                    <InputText id="structure-connection-description" class="form-control" @bind-Value="_newConnection.Description" />
+                    <ValidationMessage For="() => _newConnection.Description" />
+                </div>
+                @if (_newConnection.InteractionType == StructuralInteractionType.AsynchronousEvent)
+                {
+                    <div class="field">
+                        <label for="structure-message-name">Nome do evento</label>
+                        <InputText id="structure-message-name" class="form-control" @bind-Value="_newConnection.MessageName" />
+                    </div>
+                }
+                <div class="field">
+                    <label for="structure-connection-status">Estado</label>
+                    <InputSelect id="structure-connection-status" class="form-select" @bind-Value="_newConnection.Status">
+                        @foreach (var status in Enum.GetValues<StructuralElementStatus>())
+                        {
+                            <option value="@status">@status</option>
+                        }
+                    </InputSelect>
+                </div>
+            </div>
+            <button class="btn btn-outline-primary" type="submit" disabled="@_isBusy">Adicionar interação</button>
+        </EditForm>
+    </details>
+</section>
+
+@code {
+    private static readonly IReadOnlyDictionary<StructuralElementType, StructuralElementType> ParentTypes =
+        new Dictionary<StructuralElementType, StructuralElementType>
+        {
+            [StructuralElementType.Container] = StructuralElementType.SoftwareSystem,
+            [StructuralElementType.Component] = StructuralElementType.Container
+        };
+
+    private readonly List<string> _errors = [];
+    private List<StructuralElement> _elements = [];
+    private List<StructuralConnection> _connections = [];
+    private ElementInput _newElement = new();
+    private ConnectionInput _newConnection = new();
+    private bool _isBusy;
+    private string? _notice;
+
+    [Parameter, EditorRequired]
+    public ProjectView Project { get; set; } = null!;
+
+    [Parameter]
+    public EventCallback<ProjectView> OnProjectChanged { get; set; }
+
+    protected override void OnParametersSet()
+    {
+        _elements = Project.StructuralElements.Select(element => new StructuralElement(
+            element.Id, element.Name, element.Type, element.ParentId, element.Description,
+            element.Responsibility, element.Technology, element.Status, element.Provenance)).ToList();
+        _connections = Project.StructuralConnections.Select(connection => new StructuralConnection(
+            connection.Id, connection.SourceId, connection.TargetId, connection.Description,
+            connection.InteractionType, connection.Protocol, connection.MessageName,
+            connection.Status, connection.Provenance)).ToList();
+    }
+
+    private async Task AddElementAsync()
+    {
+        var element = new StructuralElement(
+            _newElement.Id.Trim(),
+            _newElement.Name.Trim(),
+            _newElement.Type,
+            string.IsNullOrWhiteSpace(_newElement.ParentId) ? null : _newElement.ParentId,
+            string.IsNullOrWhiteSpace(_newElement.Description) ? null : _newElement.Description.Trim(),
+            null,
+            null,
+            _newElement.Status,
+            new StructuralProvenance(StructuralSourceKind.Manual, null, null));
+        await SaveStructureAsync("Elemento estrutural salvo.", _elements.Append(element).ToList(), _connections);
+        if (_errors.Count == 0)
+        {
+            _newElement = new ElementInput();
+        }
+    }
+
+    private async Task AddConnectionAsync()
+    {
+        var connection = new StructuralConnection(
+            _newConnection.Id.Trim(),
+            _newConnection.SourceId,
+            _newConnection.TargetId,
+            _newConnection.Description.Trim(),
+            _newConnection.InteractionType,
+            null,
+            _newConnection.InteractionType == StructuralInteractionType.AsynchronousEvent
+                ? _newConnection.MessageName?.Trim()
+                : null,
+            _newConnection.Status,
+            new StructuralProvenance(StructuralSourceKind.Manual, null, null));
+        await SaveStructureAsync("Interação salva.", _elements, _connections.Append(connection).ToList());
+        if (_errors.Count == 0)
+        {
+            _newConnection = new ConnectionInput();
+        }
+    }
+
+    private Task ChangeElementStatusAsync(string elementId, StructuralElementStatus status)
+    {
+        var elements = _elements.Select(element => element.Id == elementId
+            ? element with { Status = status }
+            : element).ToList();
+        return SaveStructureAsync("Estado do elemento atualizado.", elements, _connections);
+    }
+
+    private Task ChangeConnectionStatusAsync(string connectionId, StructuralElementStatus status)
+    {
+        var connections = _connections.Select(connection => connection.Id == connectionId
+            ? connection with { Status = status }
+            : connection).ToList();
+        return SaveStructureAsync("Estado da interação atualizado.", _elements, connections);
+    }
+
+    private async Task SaveStructureAsync(
+        string successMessage,
+        IReadOnlyList<StructuralElement> elements,
+        IReadOnlyList<StructuralConnection> connections)
+    {
+        _errors.Clear();
+        _notice = null;
+        _isBusy = true;
+        try
+        {
+            var result = await Sender.Send(new UpdateArchitecturalStructureCommand(
+                Project.Id,
+                elements,
+                connections));
+            if (!result.TryGetValue(out var updated))
+            {
+                _errors.AddRange(result.Errors.Select(error => error.Message));
+                return;
+            }
+
+            _elements = updated.StructuralElements.Select(element => new StructuralElement(
+                element.Id, element.Name, element.Type, element.ParentId, element.Description,
+                element.Responsibility, element.Technology, element.Status, element.Provenance)).ToList();
+            _connections = updated.StructuralConnections.Select(connection => new StructuralConnection(
+                connection.Id, connection.SourceId, connection.TargetId, connection.Description,
+                connection.InteractionType, connection.Protocol, connection.MessageName,
+                connection.Status, connection.Provenance)).ToList();
+            _notice = successMessage;
+            await OnProjectChanged.InvokeAsync(updated);
+        }
+        finally
+        {
+            _isBusy = false;
+        }
+    }
+
+    private sealed class ElementInput
+    {
+        [Required(ErrorMessage = "Informe um ID estável.")]
+        [StringLength(120)]
+        public string Id { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Informe o nome do elemento.")]
+        [StringLength(120)]
+        public string Name { get; set; } = string.Empty;
+
+        public StructuralElementType Type { get; set; }
+
+        public string? ParentId { get; set; }
+
+        public string? Description { get; set; }
+
+        public StructuralElementStatus Status { get; set; } = StructuralElementStatus.Proposed;
+    }
+
+    private sealed class ConnectionInput
+    {
+        [Required(ErrorMessage = "Informe um ID estável.")]
+        [StringLength(120)]
+        public string Id { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Selecione uma origem.")]
+        public string SourceId { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Selecione um destino.")]
+        public string TargetId { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Descreva a interação.")]
+        [StringLength(2000)]
+        public string Description { get; set; } = string.Empty;
+
+        public StructuralInteractionType InteractionType { get; set; }
+
+        public string? MessageName { get; set; }
+
+        public StructuralElementStatus Status { get; set; } = StructuralElementStatus.Proposed;
+    }
+}

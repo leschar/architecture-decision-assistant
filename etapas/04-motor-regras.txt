@@ -1,0 +1,24 @@
+Atue como arquiteto especialista em Rule Engines.
+
+Crie um motor de decisão baseado em regras.
+
+O motor deverá:
+
+- Receber requisitos
+- Avaliar regras
+- Calcular score
+- Gerar recomendações
+- Explicar decisões
+
+Quero:
+
+1. Modelo da regra.
+2. Estrutura das regras em JSON.
+3. Estratégia de avaliação.
+4. Sistema de pontuação.
+5. Sistema de confiança.
+6. Sistema de conflito.
+7. Sistema de alternativas.
+8. Estratégia de ranking.
+
+Mostre exemplos completos.

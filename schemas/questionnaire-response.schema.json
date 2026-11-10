@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Architectural questionnaire response",
+  "type": "object",
+  "required": [
+    "schemaVersion",
+    "questionId",
+    "questionVersion",
+    "status",
+    "source",
+    "recordedAt"
+  ],
+  "properties": {
+    "schemaVersion": { "const": "1.0" },
+    "questionId": { "type": "string", "pattern": "^[a-z]{3}-\\d{2}$" },
+    "questionVersion": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$" },
+    "status": {
+      "type": "string",
+      "enum": ["Confirmed", "Provisional", "Unknown", "NotApplicable", "Declined"]
+    },
+    "source": {
+      "type": "string",
+      "enum": ["Measured", "Committed", "Estimated", "UserProvided"]
+    },
+    "value": {
+      "oneOf": [
+        { "type": ["string", "number", "boolean"] },
+        {
+          "type": "array",
+          "items": { "type": ["string", "number", "boolean"] }
+        }
+      ]
+    },
+    "unit": { "type": "string", "minLength": 1 },
+    "scenario": { "type": "string", "minLength": 1 },
+    "timeHorizon": { "type": "string", "minLength": 1 },
+    "recordedAt": { "type": "string", "format": "date-time" },
+    "notes": { "type": "string" }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "status": { "enum": ["Confirmed", "Provisional"] }
+        },
+        "required": ["status"]
+      },
+      "then": { "required": ["value"] },
+      "else": { "not": { "required": ["value"] } }
+    }
+  ],
+  "additionalProperties": false
+}

@@ -1,0 +1,28 @@
+{
+  "id": "outbox",
+  "kind": "Pattern",
+  "schemaVersion": "1.0",
+  "version": "1.0.0",
+  "name": "Transactional Outbox",
+  "description": "Pattern que registra a mensagem a publicar na mesma transação local que altera os dados de negócio, permitindo publicação posterior confiável.",
+  "category": "Messaging",
+  "problem": "Uma aplicação pode persistir uma alteração e falhar antes de publicar o evento correspondente, ou publicar uma mensagem cuja alteração não foi confirmada.",
+  "solution": "Persistir a alteração de negócio e o registro de saída atomicamente; um processo separado publica e marca as mensagens processadas.",
+  "benefits": [
+    "Reduz a inconsistência entre persistência local e publicação de mensagens.",
+    "Desacopla a transação de negócio da disponibilidade imediata do broker."
+  ],
+  "risks": [
+    "Exige mecanismo de despacho, retentativas e tratamento de mensagens duplicadas.",
+    "Pode introduzir atraso de publicação e operação adicional."
+  ],
+  "complexity": 6,
+  "useWhen": [
+    "Uma alteração persistida precisa resultar em mensagem confiável.",
+    "A aplicação usa um broker e aceita publicação assíncrona."
+  ],
+  "avoidWhen": [
+    "Não existe necessidade de publicar eventos ou mensagens.",
+    "O custo de manter o dispatcher não se justifica para o fluxo."
+  ]
+}

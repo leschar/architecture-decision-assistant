@@ -1,0 +1,34 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="..\..\schemas\modular-monolith.json"
+                      LogicalName="ArchitectureAssistant.KnowledgeBase.Catalog.modular-monolith.json" />
+    <EmbeddedResource Include="..\..\schemas\microservices.json"
+                      LogicalName="ArchitectureAssistant.KnowledgeBase.Catalog.microservices.json" />
+    <EmbeddedResource Include="..\..\schemas\monolith.json"
+                      LogicalName="ArchitectureAssistant.KnowledgeBase.Catalog.monolith.json" />
+    <EmbeddedResource Include="..\..\schemas\cqrs.json"
+                      LogicalName="ArchitectureAssistant.KnowledgeBase.Catalog.cqrs.json" />
+    <EmbeddedResource Include="..\..\schemas\saga.json"
+                      LogicalName="ArchitectureAssistant.KnowledgeBase.Catalog.saga.json" />
+    <EmbeddedResource Include="..\..\schemas\outbox.json"
+                      LogicalName="ArchitectureAssistant.KnowledgeBase.Catalog.outbox.json" />
+    <EmbeddedResource Include="..\..\schemas\redis.json"
+                      LogicalName="ArchitectureAssistant.KnowledgeBase.Catalog.redis.json" />
+    <EmbeddedResource Include="..\..\schemas\rabbitmq.json"
+                      LogicalName="ArchitectureAssistant.KnowledgeBase.Catalog.rabbitmq.json" />
+    <EmbeddedResource Include="..\..\schemas\kafka.json"
+                      LogicalName="ArchitectureAssistant.KnowledgeBase.Catalog.kafka.json" />
+    <EmbeddedResource Include="..\..\schemas\rule-small-team-microservices.json"
+                      LogicalName="ArchitectureAssistant.KnowledgeBase.Catalog.rule-small-team-microservices.json" />
+    <EmbeddedResource Include="..\..\schemas\rule-scalability-fit.json"
+                      LogicalName="ArchitectureAssistant.KnowledgeBase.Catalog.rule-scalability-fit.json" />
+  </ItemGroup>
+
+</Project>

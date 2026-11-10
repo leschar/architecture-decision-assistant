@@ -1,0 +1,14 @@
+bin/**
+obj/**
+TestResults/**
+coverage/**
+node_modules/**
+
+logs/**
+temp/**
+artifacts/**
+
+*.log
+*.trx
+
+wwwroot/lib/**

@@ -1,0 +1,2427 @@
+{
+  "schemaVersion": "1.0",
+  "questionnaireId": "architectural-discovery",
+  "version": "1.0.0",
+  "locale": "pt-BR",
+  "questions": [
+    {
+      "id": "biz-01",
+      "category": "Negócio",
+      "prompt": "Qual problema de negócio o sistema deve resolver?",
+      "objectiveAndImpact": "Delimitar domínio e evitar arquitetura sem contexto.",
+      "affectedAreas": [
+        "Arquitetura",
+        "princípios",
+        "patterns"
+      ],
+      "weight": 4,
+      "responseType": "text",
+      "responseGuidance": "Texto curto",
+      "factPath": "project.questionnaire.answers.biz-01",
+      "phase": "core",
+      "version": "1.0.0"
+    },
+    {
+      "id": "biz-02",
+      "category": "Negócio",
+      "prompt": "Qual é o resultado mensurável esperado com o sistema?",
+      "objectiveAndImpact": "Identificar métricas de sucesso e requisitos verificáveis.",
+      "affectedAreas": [
+        "Arquitetura",
+        "observabilidade"
+      ],
+      "weight": 3,
+      "responseType": "text",
+      "responseGuidance": "Texto + métrica",
+      "factPath": "project.questionnaire.answers.biz-02",
+      "phase": "conditional",
+      "version": "1.0.0"
+    },
+    {
+      "id": "biz-03",
+      "category": "Negócio",
+      "prompt": "O sistema é novo, uma substituição ou uma evolução?",
+      "objectiveAndImpact": "Entender legado, migração e coexistência.",
+      "affectedAreas": [
+        "Arquitetura",
+        "integração",
+        "dados"
+      ],
+      "weight": 4,
+      "responseType": "singleChoice",
+      "responseGuidance": "Opção única",
+      "factPath": "project.questionnaire.answers.biz-03",
+      "phase": "conditional",
+      "version": "1.0.0"
+    },
+    {
+      "id": "biz-04",
+      "category": "Negócio",
+      "prompt": "Qual é o prazo para a primeira versão útil?",
+      "objectiveAndImpact": "Tornar explícito o trade-off prazo versus escopo e operação.",
+      "affectedAreas": [
+        "Arquitetura",
+        "plataforma"
+      ],
+      "weight": 3,
+      "responseType": "structured",
+      "responseGuidance": "Data/período",
+      "factPath": "project.questionnaire.answers.biz-04",
+      "phase": "conditional",
+      "version": "1.0.0"
+    },
+    {
+      "id": "biz-05",
+      "category": "Negócio",
+      "prompt": "Quais processos de negócio são críticos para a operação?",
+      "objectiveAndImpact": "Priorizar disponibilidade, consistência e recuperação.",
+      "affectedAreas": [
+        "Arquitetura",
+        "dados",
+        "padrões"
+      ],
+      "weight": 5,
+      "responseType": "multiChoice",
+      "responseGuidance": "Lista",
+      "factPath": "project.questionnaire.answers.biz-05",
+      "phase": "core",
+      "version": "1.0.0"
+    },
+    {
+      "id": "biz-06",
+      "category": "Negócio",
+      "prompt": "Quais processos podem ser executados de forma assíncrona?",
+      "objectiveAndImpact": "Identificar tolerância a processamento eventual e filas.",
+      "affectedAreas": [
+        "Patterns",
+        "mensageria"
+      ],
+      "weight": 4,
+      "responseType": "multiChoice",
+      "responseGuidance": "Lista/Unknown",
+      "factPath": "project.questionnaire.answers.biz-06",
+      "phase": "conditional",
+      "version": "1.0.0"
+    },
+    {
+      "id": "biz-07",
+      "category": "Negócio",
+      "prompt": "Há períodos sazonais ou eventos que alteram a demanda?",
+      "objectiveAndImpact": "Capturar picos previsíveis e planejamento de escala.",
+      "affectedAreas": [
+        "Arquitetura",
+        "infraestrutura"
+      ],
+      "weight": 3,
+      "responseType": "structured",
+      "responseGuidance": "Calendário/estimativa",
+      "factPath": "project.questionnaire.answers.biz-07",
+      "phase": "conditional",
+      "version": "1.0.0"
+    },
+    {
+      "id": "biz-08",
+      "category": "Negócio",
+      "prompt": "Qual é o custo de uma hora de indisponibilidade?",
+      "objectiveAndImpact": "Quantificar criticidade e orientar resiliência.",
+      "affectedAreas": [
+        "Disponibilidade",
+        "operação"
+      ],
+      "weight": 5,
+      "responseType": "structured",
+      "responseGuidance": "Valor/faixa",
+      "factPath": "project.questionnaire.answers.biz-08",
+      "phase": "conditional",
+      "version": "1.0.0"
+    },
+    {
+      "id": "biz-09",
+      "category": "Negócio",
+      "prompt": "Existem metas de receita, conversão ou redução de custo ligadas ao sistema?",
+      "objectiveAndImpact": "Relacionar decisões a impactos e custo de operação.",
+      "affectedAreas": [
+        "Arquitetura",
+        "cloud"
+      ],
+      "weight": 3,
+      "responseType": "structured",
+      "responseGuidance": "Métrica/faixa",
+      "factPath": "project.questionnaire.answers.biz-09",
+      "phase": "conditional",
+      "version": "1.0.0"
+    },
+    {
+      "id": "biz-10",
+      "category": "Negócio",
+      "prompt": "Quais restrições legais ou contratuais de negócio se aplicam?",
+      "objectiveAndImpact": "Identificar obrigações não negociáveis.",
+      "affectedAreas": [
+        "Segurança",
+        "dados",
+        "governança"
+      ],
+      "weight": 5,
+      "responseType": "multiChoice",
+      "responseGuidance": "Lista/Unknown",
+      "factPath": "project.questionnaire.answers.biz-10",
+      "phase": "conditional",
+      "version": "1.0.0"
+    },
+    {
+      "id": "biz-11",
+      "category": "Negócio",
+      "prompt": "Quais capacidades de negócio devem permanecer independentes?",
+      "objectiveAndImpact": "Apoiar identificação de limites de domínio e autonomia.",
+      "affectedAreas": [
+        "Arquitetura",
+        "DDD"
+      ],
+      "weight": 4,
+      "responseType": "multiChoice",
+      "responseGuidance": "Lista",
+      "factPath": "project.questionnaire.answers.biz-11",
+      "phase": "conditional",
+      "version": "1.0.0"
+    },
+    {
+      "id": "biz-12",
+      "category": "Negócio",
+      "prompt": "Como o sucesso do sistema será avaliado após a implantação?",
+      "objectiveAndImpact": "Definir medidas operacionais e critérios de aceitação.",
+      "affectedAreas": [
+        "Observabilidade",
+        "governança"
+      ],
+      "weight": 3,
+      "responseType": "text",
+      "responseGuidance": "Texto/métricas",
+      "factPath": "project.questionnaire.answers.biz-12",
+      "phase": "conditional",
+      "version": "1.0.0"
+    },
+    {
+      "id": "usr-01",
+      "category": "Usuários",
+      "prompt": "Quem são os principais perfis de usuário?",
+      "objectiveAndImpact": "Identificar jornadas, permissões e canais.",
+      "affectedAreas": [
+        "Arquitetura",
+        "identidade"
+      ],
+      "weight": 3,
+      "responseType": "multiChoice",
+      "responseGuidance": "Lista",
+      "factPath": "project.questionnaire.answers.usr-01",
+      "phase": "conditional",
+      "version": "1.0.0"
+    },
+    {
+      "id": "usr-02",
+      "category": "Usuários",
+      "prompt": "Quantos usuários ativos são esperados no primeiro ano?",
+      "objectiveAndImpact": "Estimar carga e capacidade inicial.",
+      "affectedAreas": [
+        "Escalabilidade",
+        "infraestrutura"
+      ],
+      "weight": 3,
+      "responseType": "structured",
+      "responseGuidance": "Número/período",
+      "factPath": "project.questionnaire.answers.usr-02",
+      "phase": "conditional",
+      "version": "1.0.0"
+    },
+    {
+      "id": "usr-03",
+      "category": "Usuários",
+      "prompt": "Quantos usuários simultâneos são esperados em condições normais e de pico?",
+      "objectiveAndImpact": "Diferenciar base cadastrada de concorrência.",
+      "affectedAreas": [
+        "Escalabilidade",
+        "performance"
+      ],
+      "weight": 4,
+      "responseType": "structured",
+      "responseGuidance": "Dois números",
+      "factPath": "project.questionnaire.answers.usr-03",
+      "phase": "core",
+      "version": "1.0.0"
+    },
+    {
+      "id": "usr-04",
+      "category": "Usuários",
+      "prompt": "De quais regiões geográficas os usuários acessarão o sistema?",
+      "objectiveAndImpact": "Avaliar latência, residência de dados e distribuição.",
+      "affectedAreas": [
+        "Cloud",
+        "rede",
+        "dados"
+      ],
+      "weight": 4,
+      "responseType": "structured",
+      "responseGuidance": "Regiões/Unknown",
+      "factPath": "project.questionnaire.answers.usr-04",
+      "phase": "conditional",
+      "version": "1.0.0"
+    },
+    {
+      "id": "usr-05",
+      "category": "Usuários",
+      "prompt": "O sistema precisa funcionar em dispositivos móveis ou conexões instáveis?",
+      "objectiveAndImpact": "Identificar requisitos de cliente, sincronização e tolerância à rede.",
+      "affectedAreas": [
+        "Arquitetura",
+        "cache",
+        "sincronização"
+      ],
+      "weight": 3,
+      "responseType": "structured",
+      "responseGuidance": "Opção + contexto",
+      "factPath": "project.questionnaire.answers.usr-05",
+      "phase": "conditional",
+      "version": "1.0.0"
+    },
+    {
+      "id": "usr-06",
+      "category": "Usuários",
+      "prompt": "Há requisitos de acessibilidade ou tecnologias assistivas?",
+      "objectiveAndImpact": "Incluir acessibilidade nos critérios de interface e conformidade.",
+      "affectedAreas": [
+        "UI",
+        "governança"
+      ],
+      "weight": 3,
+      "responseType": "structured",
+      "responseGuidance": "Requisito/Unknown",
+      "factPath": "project.questionnaire.answers.usr-06",
+      "phase": "conditional",
+      "version": "1.0.0"
+    },
+    {
+      "id": "usr-07",
+      "category": "Usuários",
+      "prompt": "Quais idiomas, fusos ou formatos regionais são necessários?",
+      "objectiveAndImpact": "Avaliar internacionalização e localização.",
+      "affectedAreas": [
+        "Arquitetura",
+        "dados",
+        "UI"
+      ],
+      "weight": 2,
+      "responseType": "multiChoice",
+      "responseGuidance": "Lista",
+      "factPath": "project.questionnaire.answers.usr-07",
+      "phase": "conditional",
+      "version": "1.0.0"
+    },
+    {
+      "id": "usr-08",
+      "category": "Usuários",
+      "prompt": "O acesso é público, autenticado ou restrito a organizações?",
+      "objectiveAndImpact": "Delimitar identidade, autorização e isolamento.",
+      "affectedAreas": [
+        "Segurança",
+        "identidade"
+      ],
+      "weight": 4,
+      "responseType": "singleChoice",
+      "responseGuidance": "Opção única",
+      "factPath": "project.questionnaire.answers.usr-08",
+      "phase": "core",
+      "version": "1.0.0"
+    },
+    {
+      "id": "usr-09",
+      "category": "Usuários",
+      "prompt": "Diferentes clientes precisam de isolamento lógico de dados?",
+      "objectiveAndImpact": "Identificar multitenancy e fronteiras de autorização.",
+      "affectedAreas": [
+        "Dados",
+        "segurança",
+        "arquitetura"
+      ],
+      "weight": 5,
+      "responseType": "boolean",
+      "responseGuidance": "Sim/não/Unknown",
+      "factPath": "project.questionnaire.answers.usr-09",
+      "phase": "conditional",
+      "version": "1.0.0"
+    },
+    {
+      "id": "usr-10",
+      "category": "Usuários",
+      "prompt": "Quais jornadas de usuário não podem ser interrompidas por falhas parciais?",
+      "objectiveAndImpact": "Priorizar degradação graciosa e fluxos críticos.",
+      "affectedAreas": [
+        "Disponibilidade",
+        "UI",
+        "arquitetura"
+      ],
+      "weight": 4,
+      "responseType": "multiChoice",
+      "responseGuidance": "Lista",
+      "factPath": "project.questionnaire.answers.usr-10",
+      "phase": "conditional",
+      "version": "1.0.0"
+    },
+    {
+      "id": "sca-01",
+      "category": "Escalabilidade",
+      "prompt": "Qual volume de requisições é esperado em média e no pico?",
+      "objectiveAndImpact": "Dimensionar throughput e cenários de carga.",
+      "affectedAreas": [
+        "Arquitetura",
+        "runtime",
+        "rede"
+      ],
+      "weight": 5,
+      "responseType": "structured",
+      "responseGuidance": "Número/unidade/janela",
+      "factPath": "project.questionnaire.answers.sca-01",
+      "phase": "core",
+      "version": "1.0.0"
+    },
+    {
+      "id": "sca-02",
+      "category": "Escalabilidade",
+      "prompt": "Qual crescimento de usuários, tráfego ou dados é esperado em 1, 3 e 5 anos?",
+      "objectiveAndImpact": "Planejar evolução sem superdimensionar o MVP.",
+      "affectedAreas": [
+        "Arquitetura",
+        "dados",
+        "cloud"
+      ],
+      "weight": 4,
+      "responseType": "structured",
+      "responseGuidance": "Estimativas",
+      "factPath": "project.questionnaire.answers.sca-02",
+      "phase": "core",
+      "version": "1.0.0"
+    },
+    {
+      "id": "sca-03",
+      "category": "Escalabilidade",
+      "prompt": "Os picos de carga são previsíveis, sazonais ou imprevisíveis?",
+      "objectiveAndImpact": "Avaliar elasticidade e capacidade reservada.",
+      "affectedAreas": [
+        "Cloud",
+        "escalabilidade"
+      ],
+      "weight": 4,
+      "responseType": "singleChoice",
+      "responseGuidance": "Opção única",
+      "factPath": "project.questionnaire.answers.sca-03",
+      "phase": "conditional",
+      "version": "1.0.0"
+    },
+    {
+      "id": "sca-04",
+      "category": "Escalabilidade",
+      "prompt": "Quais operações concentram a maior carga?",
+      "objectiveAndImpact": "Encontrar hotspots funcionais e de dados.",
+      "affectedAreas": [
+        "Arquitetura",
+        "performance"
+      ],
+      "weight": 4,
+      "responseType": "multiChoice",
+      "responseGuidance": "Lista/Unknown",
+      "factPath": "project.questionnaire.answers.sca-04",
+      "phase": "conditional",
+      "version": "1.0.0"
+    },
+    {
+      "id": "sca-05",
+      "category": "Escalabilidade",
+      "prompt": "Há componentes que precisam escalar independentemente?",
+      "objectiveAndImpact": "Avaliar particionamento, modularidade ou serviços independentes.",
+      "affectedAreas": [
+        "Arquitetura",
+        "plataforma"
+      ],
+      "weight": 4,
+      "responseType": "multiChoice",
+      "responseGuidance": "Lista/Unknown",
+      "factPath": "project.questionnaire.answers.sca-05",
+      "phase": "conditional",
+      "version": "1.0.0"
+    },
+    {
+      "id": "sca-06",
+      "category": "Escalabilidade",
+      "prompt": "O sistema precisa aumentar capacidade automaticamente?",
+      "objectiveAndImpact": "Identificar autoscaling e sinais de escala.",
+      "affectedAreas": [
+        "Cloud",
+        "infraestrutura"
+      ],
+      "weight": 3,
+      "responseType": "boolean",
+      "responseGuidance": "Sim/não/Unknown",
+      "factPath": "project.questionnaire.answers.sca-06",
+      "phase": "conditional",
+      "version": "1.0.0"
+    },
+    {
+      "id": "sca-07",
+      "category": "Escalabilidade",
+      "prompt": "Qual tempo máximo aceitável para absorver um pico repentino?",
+      "objectiveAndImpact": "Avaliar filas, aquecimento e elasticidade.",
+      "affectedAreas": [
+        "Escalabilidade",
+        "mensageria"
+      ],
+      "weight": 3,
+      "responseType": "structured",
+      "responseGuidance": "Tempo",
+      "factPath": "project.questionnaire.answers.sca-07",
+      "phase": "conditional",
+      "version": "1.0.0"
+    },
+    {
+      "id": "sca-08",
+      "category": "Escalabilidade",
+      "prompt": "Há limite máximo de custo mesmo durante picos?",
+      "objectiveAndImpact": "Explicitar trade-off entre capacidade, atraso e custo.",
+      "affectedAreas": [
+        "Cloud",
+        "governança"
+      ],
+      "weight": 4,
+      "responseType": "structured",
+      "responseGuidance": "Valor/faixa",
+      "factPath": "project.questionnaire.answers.sca-08",
+      "phase": "conditional",
+      "version": "1.0.0"
+    },
+    {
+      "id": "sca-09",
+      "category": "Escalabilidade",
+      "prompt": "Existe processamento em lote? Qual volume e janela?",
+      "objectiveAndImpact": "Dimensionar jobs, filas e isolamento de carga.",
+      "affectedAreas": [
+        "Dados",
+        "compute",
+        "mensageria"
+      ],
+      "weight": 3,
+      "responseType": "structured",
+      "responseGuidance": "Volume + duração",
+      "factPath": "project.questionnaire.answers.sca-09",
+      "phase": "conditional",
+      "version": "1.0.0"
+    },
+    {
+      "id": "sca-10",
+      "category": "Escalabilidade",
+      "prompt": "O tráfego de leitura é muito diferente do tráfego de escrita?",
+      "objectiveAndImpact": "Avaliar modelos de leitura, cache ou separação de carga.",
+      "affectedAreas": [
+        "Dados",
+        "CQRS",
+        "cache"
+      ],
+      "weight": 3,
+      "responseType": "structured",
+      "responseGuidance": "Estimativa comparativa",
+      "factPath": "project.questionnaire.answers.sca-10",
+      "phase": "conditional",
+      "version": "1.0.0"
+    },
+    {
+      "id": "sca-11",
+      "category": "Escalabilidade",
+      "prompt": "O sistema precisa particionar dados ou carga por cliente, região ou domínio?",
+      "objectiveAndImpact": "Identificar sharding, tenancy e limites de dados.",
+      "affectedAreas": [
+        "Dados",
+        "arquitetura"
+      ],
+      "weight": 4,
+      "responseType": "structured",
+      "responseGuidance": "Opção + contexto",
+      "factPath": "project.questionnaire.answers.sca-11",
+      "phase": "conditional",
+      "version": "1.0.0"
+    },
+    {
+      "id": "sca-12",
+      "category": "Escalabilidade",
+      "prompt": "Qual é o maior tamanho esperado de arquivo, mensagem ou transação?",
+      "objectiveAndImpact": "Evitar limites de payload e bloqueios de processamento.",
+      "affectedAreas": [
+        "Integração",
+        "armazenamento"
+      ],
+      "weight": 3,
+      "responseType": "structured",
+      "responseGuidance": "Número/unidade",
+      "factPath": "project.questionnaire.answers.sca-12",
+      "phase": "conditional",
+      "version": "1.0.0"
+    },
+    {
+      "id": "avl-01",
+      "category": "Disponibilidade e recuperação",
+      "prompt": "Qual disponibilidade mensal é exigida para o sistema?",
+      "objectiveAndImpact": "Estabelecer SLO e orçamento de erro.",
+      "affectedAreas": [
+        "Arquitetura",
+        "operação",
+        "cloud"
+      ],
+      "weight": 5,
+      "responseType": "structured",
+      "responseGuidance": "Percentual/Unknown",
+      "factPath": "project.questionnaire.answers.avl-01",
+      "phase": "core",
+      "version": "1.0.0"
+    },
+    {
+      "id": "avl-02",
+      "category": "Disponibilidade e recuperação",
+      "prompt": "Quais períodos de indisponibilidade são aceitáveis para manutenção?",
+      "objectiveAndImpact": "Planejar deploy, manutenção e janelas operacionais.",
+      "affectedAreas": [
+        "Implantação",
+        "operação"
+      ],
+      "weight": 4,
+      "responseType": "structured",
+      "responseGuidance": "Janela/Unknown",
+      "factPath": "project.questionnaire.answers.avl-02",
+      "phase": "conditional",
+      "version": "1.0.0"
+    },
+    {
+      "id": "avl-03",
+      "category": "Disponibilidade e recuperação",
+      "prompt": "Qual é o RTO para cada processo crítico?",
+      "objectiveAndImpact": "Definir tempo-alvo de recuperação.",
+      "affectedAreas": [
+        "Recuperação",
+        "infraestrutura"
+      ],
+      "weight": 5,
+      "responseType": "structured",
+      "responseGuidance": "Tempo por processo",
+      "factPath": "project.questionnaire.answers.avl-03",
+      "phase": "core",
+      "version": "1.0.0"
+    },
+    {
+      "id": "avl-04",
+      "category": "Disponibilidade e recuperação",
+      "prompt": "Qual é o RPO para cada conjunto de dados crítico?",
+      "objectiveAndImpact": "Definir perda de dados aceitável e estratégia de backup/replicação.",
+      "affectedAreas": [
+        "Dados",
+        "recuperação"
+      ],
+      "weight": 5,
+      "responseType": "structured",
+      "responseGuidance": "Tempo por conjunto",
+      "factPath": "project.questionnaire.answers.avl-04",
+      "phase": "core",
+      "version": "1.0.0"
+    },
+    {
+      "id": "avl-05",
+      "category": "Disponibilidade e recuperação",
+      "prompt": "O sistema deve continuar operando quando uma dependência externa falhar?",
+      "objectiveAndImpact": "Definir degradação graciosa e isolamento de falha.",
+      "affectedAreas": [
+        "Resiliência",
+        "integração"
+      ],
+      "weight": 4,
+      "responseType": "structured",
+      "responseGuidance": "Cenário por dependência",
+      "factPath": "project.questionnaire.answers.avl-05",
+      "phase": "conditional",
+      "version": "1.0.0"
+    },
+    {
+      "id": "avl-06",
+      "category": "Disponibilidade e recuperação",
+      "prompt": "Quais funções podem ser temporariamente desabilitadas durante uma falha?",
+      "objectiveAndImpact": "Definir modos degradados e prioridade de capacidades.",
+      "affectedAreas": [
+        "Arquitetura",
+        "operação"
+      ],
+      "weight": 4,
+      "responseType": "multiChoice",
+      "responseGuidance": "Lista",
+      "factPath": "project.questionnaire.answers.avl-06",
+      "phase": "conditional",
+      "version": "1.0.0"
+    },
+    {
+      "id": "avl-07",
+      "category": "Disponibilidade e recuperação",
+      "prompt": "É necessário operar em mais de uma zona de disponibilidade?",
+      "objectiveAndImpact": "Entender tolerância a falhas de infraestrutura.",
+      "affectedAreas": [
+        "Cloud",
+        "deployment"
+      ],
+      "weight": 4,
+      "responseType": "boolean",
+      "responseGuidance": "Sim/não/Unknown",
+      "factPath": "project.questionnaire.answers.avl-07",
+      "phase": "conditional",
+      "version": "1.0.0"
+    },
+    {
+      "id": "avl-08",
+      "category": "Disponibilidade e recuperação",
+      "prompt": "É necessário operar em mais de uma região?",
+      "objectiveAndImpact": "Avaliar recuperação regional, consistência e custo.",
+      "affectedAreas": [
+        "Cloud",
+        "dados",
+        "rede"
+      ],
+      "weight": 4,
+      "responseType": "boolean",
+      "responseGuidance": "Sim/não/condições",
+      "factPath": "project.questionnaire.answers.avl-08",
+      "phase": "conditional",
+      "version": "1.0.0"
+    },
+    {
+      "id": "avl-09",
+      "category": "Disponibilidade e recuperação",
+      "prompt": "Como será verificado que backups podem ser restaurados?",
+      "objectiveAndImpact": "Incluir testes de recuperação, não apenas cópia de dados.",
+      "affectedAreas": [
+        "Dados",
+        "governança"
+      ],
+      "weight": 5,
+      "responseType": "structured",
+      "responseGuidance": "Processo/frequência",
+      "factPath": "project.questionnaire.answers.avl-09",
+      "phase": "conditional",
+      "version": "1.0.0"
+    },
+    {
+      "id": "avl-10",
+      "category": "Disponibilidade e recuperação",
+      "prompt": "Qual frequência máxima de falhas ou perda de serviço é aceitável?",
+      "objectiveAndImpact": "Refinar objetivos de confiabilidade por jornada.",
+      "affectedAreas": [
+        "Operação",
+        "arquitetura"
+      ],
+      "weight": 4,
+      "responseType": "structured",
+      "responseGuidance": "Taxa/Unknown",
+      "factPath": "project.questionnaire.answers.avl-10",
+      "phase": "conditional",
+      "version": "1.0.0"
+    },
+    {
+      "id": "avl-11",
+      "category": "Disponibilidade e recuperação",
+      "prompt": "Há requisito de continuidade de negócio ou plano de desastre?",
+      "objectiveAndImpact": "Descobrir processos, responsáveis e cenários de contingência.",
+      "affectedAreas": [
+        "Governança",
+        "recuperação"
+      ],
+      "weight": 4,
+      "responseType": "boolean",
+      "responseGuidance": "Sim/não/documento",
+      "factPath": "project.questionnaire.answers.avl-11",
+      "phase": "conditional",
+      "version": "1.0.0"
+    },
+    {
+      "id": "avl-12",
+      "category": "Disponibilidade e recuperação",
+      "prompt": "Quais operações precisam ser idempotentes ou repetíveis após falha?",
+      "objectiveAndImpact": "Reduzir duplicidades e inconsistência em retentativas.",
+      "affectedAreas": [
+        "Dados",
+        "integração",
+        "patterns"
+      ],
+      "weight": 4,
+      "responseType": "multiChoice",
+      "responseGuidance": "Lista/Unknown",
+      "factPath": "project.questionnaire.answers.avl-12",
+      "phase": "conditional",
+      "version": "1.0.0"
+    },
+    {
+      "id": "obs-01",
+      "category": "Observabilidade",
+      "prompt": "Quais indicadores mostram que o sistema está saudável para o negócio?",
+      "objectiveAndImpact": "Definir métricas técnicas ligadas a resultados do usuário.",
+      "affectedAreas": [
+        "Observabilidade",
+        "negócio"
+      ],
+      "weight": 4,
+      "responseType": "multiChoice",
+      "responseGuidance": "Lista",
+      "factPath": "project.questionnaire.answers.obs-01",
+      "phase": "core",
+      "version": "1.0.0"
+    },
+    {
+      "id": "obs-02",
+      "category": "Observabilidade",
+      "prompt": "Quais jornadas precisam ser rastreadas ponta a ponta?",
+      "objectiveAndImpact": "Identificar correlação de chamadas e processos assíncronos.",
+      "affectedAreas": [
+        "Tracing",
+        "integração"
+      ],
+      "weight": 4,
+      "responseType": "multiChoice",
+      "responseGuidance": "Lista",
+      "factPath": "project.questionnaire.answers.obs-02",
+      "phase": "conditional",
+      "version": "1.0.0"
+    },
+    {
+      "id": "obs-03",
+      "category": "Observabilidade",
+      "prompt": "Há requisitos de retenção para logs, métricas e traces?",
+      "objectiveAndImpact": "Avaliar custo, privacidade e diagnóstico.",
+      "affectedAreas": [
+        "Observabilidade",
+        "dados"
+      ],
+      "weight": 3,
+      "responseType": "structured",
+      "responseGuidance": "Período por sinal",
+      "factPath": "project.questionnaire.answers.obs-03",
+      "phase": "conditional",
+      "version": "1.0.0"
+    },
+    {
+      "id": "obs-04",
+      "category": "Observabilidade",
+      "prompt": "Quais eventos de segurança devem ser auditados?",
+      "objectiveAndImpact": "Definir trilha de auditoria e requisitos de investigação.",
+      "affectedAreas": [
+        "Segurança",
+        "observabilidade"
+      ],
+      "weight": 5,
+      "responseType": "multiChoice",
+      "responseGuidance": "Lista",
+      "factPath": "project.questionnaire.answers.obs-04",
+      "phase": "conditional",
+      "version": "1.0.0"
+    },
+    {
+      "id": "obs-05",
+      "category": "Observabilidade",
+      "prompt": "Quem será responsável por responder a alertas fora do horário comercial?",
+      "objectiveAndImpact": "Planejar operação, escalonamento e SLOs.",
+      "affectedAreas": [
+        "Equipe",
+        "operação"
+      ],
+      "weight": 4,
+      "responseType": "structured",
+      "responseGuidance": "Papel/processo",
+      "factPath": "project.questionnaire.answers.obs-05",
+      "phase": "core",
+      "version": "1.0.0"
+    },
+    {
+      "id": "obs-06",
+      "category": "Observabilidade",
+      "prompt": "Quais limites de alerta evitam ruído sem ocultar incidentes?",
+      "objectiveAndImpact": "Evitar alertas não acionáveis e fadiga operacional.",
+      "affectedAreas": [
+        "Operação",
+        "monitoramento"
+      ],
+      "weight": 3,
+      "responseType": "structured",
+      "responseGuidance": "Processo/Unknown",
+      "factPath": "project.questionnaire.answers.obs-06",
+      "phase": "conditional",
+      "version": "1.0.0"
+    },
+    {
+      "id": "obs-07",
+      "category": "Observabilidade",
+      "prompt": "É necessário correlacionar logs entre componentes ou serviços?",
+      "objectiveAndImpact": "Determinar necessidade de IDs de correlação.",
+      "affectedAreas": [
+        "Logging",
+        "arquitetura"
+      ],
+      "weight": 3,
+      "responseType": "boolean",
+      "responseGuidance": "Sim/não",
+      "factPath": "project.questionnaire.answers.obs-07",
+      "phase": "conditional",
+      "version": "1.0.0"
+    },
+    {
+      "id": "obs-08",
+      "category": "Observabilidade",
+      "prompt": "Quais indicadores de negócio precisam ser acompanhados em tempo real?",
+      "objectiveAndImpact": "Integrar telemetria de produto e operação.",
+      "affectedAreas": [
+        "Observabilidade",
+        "dados"
+      ],
+      "weight": 3,
+      "responseType": "multiChoice",
+      "responseGuidance": "Lista",
+      "factPath": "project.questionnaire.answers.obs-08",
+      "phase": "conditional",
+      "version": "1.0.0"
+    },
+    {
+      "id": "obs-09",
+      "category": "Observabilidade",
+      "prompt": "Há restrições sobre dados pessoais em logs e telemetria?",
+      "objectiveAndImpact": "Evitar vazamento e definir mascaramento/minimização.",
+      "affectedAreas": [
+        "Segurança",
+        "privacidade"
+      ],
+      "weight": 5,
+      "responseType": "multiChoice",
+      "responseGuidance": "Lista/Unknown",
+      "factPath": "project.questionnaire.answers.obs-09",
+      "phase": "conditional",
+      "version": "1.0.0"
+    },
+    {
+      "id": "obs-10",
+      "category": "Observabilidade",
+      "prompt": "Qual prazo máximo para detectar uma falha crítica?",
+      "objectiveAndImpact": "Definir objetivos de detecção e monitoramento.",
+      "affectedAreas": [
+        "Operação",
+        "disponibilidade"
+      ],
+      "weight": 4,
+      "responseType": "structured",
+      "responseGuidance": "Tempo",
+      "factPath": "project.questionnaire.answers.obs-10",
+      "phase": "conditional",
+      "version": "1.0.0"
+    },
+    {
+      "id": "tem-01",
+      "category": "Equipe e capacidade operacional",
+      "prompt": "Quantas pessoas desenvolverão o sistema inicialmente?",
+      "objectiveAndImpact": "Avaliar carga cognitiva e custo de coordenação.",
+      "affectedAreas": [
+        "Arquitetura",
+        "organização"
+      ],
+      "weight": 3,
+      "responseType": "structured",
+      "responseGuidance": "Número",
+      "factPath": "project.questionnaire.answers.tem-01",
+      "phase": "conditional",
+      "version": "1.0.0"
+    },
+    {
+      "id": "tem-02",
+      "category": "Equipe e capacidade operacional",
+      "prompt": "Quais competências técnicas já existem na equipe?",
+      "objectiveAndImpact": "Evitar arquitetura incompatível com capacidade disponível.",
+      "affectedAreas": [
+        "Tecnologia",
+        "arquitetura"
+      ],
+      "weight": 4,
+      "responseType": "multiChoice",
+      "responseGuidance": "Lista",
+      "factPath": "project.questionnaire.answers.tem-02",
+      "phase": "conditional",
+      "version": "1.0.0"
+    },
+    {
+      "id": "tem-03",
+      "category": "Equipe e capacidade operacional",
+      "prompt": "Há equipe dedicada à operação ou plataforma?",
+      "objectiveAndImpact": "Avaliar capacidade de operar componentes distribuídos.",
+      "affectedAreas": [
+        "Operação",
+        "cloud"
+      ],
+      "weight": 5,
+      "responseType": "boolean",
+      "responseGuidance": "Sim/não/parcial",
+      "factPath": "project.questionnaire.answers.tem-03",
+      "phase": "core",
+      "version": "1.0.0"
+    },
+    {
+      "id": "tem-04",
+      "category": "Equipe e capacidade operacional",
+      "prompt": "Quantas equipes precisam entregar mudanças de forma independente?",
+      "objectiveAndImpact": "Identificar necessidade real de autonomia e limites de serviço.",
+      "affectedAreas": [
+        "Arquitetura",
+        "governança"
+      ],
+      "weight": 4,
+      "responseType": "structured",
+      "responseGuidance": "Número/contexto",
+      "factPath": "project.questionnaire.answers.tem-04",
+      "phase": "conditional",
+      "version": "1.0.0"
+    },
+    {
+      "id": "tem-05",
+      "category": "Equipe e capacidade operacional",
+      "prompt": "Qual experiência existe com sistemas distribuídos em produção?",
+      "objectiveAndImpact": "Avaliar risco operacional de distribuição.",
+      "affectedAreas": [
+        "Arquitetura",
+        "observabilidade"
+      ],
+      "weight": 4,
+      "responseType": "structured",
+      "responseGuidance": "Maturidade",
+      "factPath": "project.questionnaire.answers.tem-05",
+      "phase": "conditional",
+      "version": "1.0.0"
+    },
+    {
+      "id": "tem-06",
+      "category": "Equipe e capacidade operacional",
+      "prompt": "Quem será responsável por manter cada componente após o lançamento?",
+      "objectiveAndImpact": "Estabelecer ownership e custo total.",
+      "affectedAreas": [
+        "Operação",
+        "governança"
+      ],
+      "weight": 4,
+      "responseType": "structured",
+      "responseGuidance": "Papéis",
+      "factPath": "project.questionnaire.answers.tem-06",
+      "phase": "conditional",
+      "version": "1.0.0"
+    },
+    {
+      "id": "tem-07",
+      "category": "Equipe e capacidade operacional",
+      "prompt": "Qual é a capacidade de suporte e resposta a incidentes?",
+      "objectiveAndImpact": "Relacionar disponibilidade a cobertura operacional.",
+      "affectedAreas": [
+        "Disponibilidade",
+        "equipe"
+      ],
+      "weight": 5,
+      "responseType": "structured",
+      "responseGuidance": "Nível/horário",
+      "factPath": "project.questionnaire.answers.tem-07",
+      "phase": "conditional",
+      "version": "1.0.0"
+    },
+    {
+      "id": "tem-08",
+      "category": "Equipe e capacidade operacional",
+      "prompt": "A equipe consegue manter mais de uma tecnologia de dados ou mensageria?",
+      "objectiveAndImpact": "Evitar fragmentação excessiva do stack.",
+      "affectedAreas": [
+        "Dados",
+        "tecnologia"
+      ],
+      "weight": 4,
+      "responseType": "boolean",
+      "responseGuidance": "Sim/não/limites",
+      "factPath": "project.questionnaire.answers.tem-08",
+      "phase": "conditional",
+      "version": "1.0.0"
+    },
+    {
+      "id": "tem-09",
+      "category": "Equipe e capacidade operacional",
+      "prompt": "Quais práticas de revisão, testes e entrega contínua já são adotadas?",
+      "objectiveAndImpact": "Avaliar prontidão para automação e frequência de deploy.",
+      "affectedAreas": [
+        "CI/CD",
+        "qualidade"
+      ],
+      "weight": 3,
+      "responseType": "multiChoice",
+      "responseGuidance": "Lista/maturidade",
+      "factPath": "project.questionnaire.answers.tem-09",
+      "phase": "conditional",
+      "version": "1.0.0"
+    },
+    {
+      "id": "tem-10",
+      "category": "Equipe e capacidade operacional",
+      "prompt": "Há restrições de contratação ou dependência de especialistas?",
+      "objectiveAndImpact": "Considerar disponibilidade de competências e risco de fornecedor.",
+      "affectedAreas": [
+        "Tecnologia",
+        "governança"
+      ],
+      "weight": 3,
+      "responseType": "multiChoice",
+      "responseGuidance": "Lista",
+      "factPath": "project.questionnaire.answers.tem-10",
+      "phase": "conditional",
+      "version": "1.0.0"
+    },
+    {
+      "id": "tem-11",
+      "category": "Equipe e capacidade operacional",
+      "prompt": "Qual frequência de implantação a equipe pretende alcançar?",
+      "objectiveAndImpact": "Influenciar estratégia de release, modularidade e automação.",
+      "affectedAreas": [
+        "Deployment",
+        "arquitetura"
+      ],
+      "weight": 3,
+      "responseType": "structured",
+      "responseGuidance": "Frequência",
+      "factPath": "project.questionnaire.answers.tem-11",
+      "phase": "conditional",
+      "version": "1.0.0"
+    },
+    {
+      "id": "tem-12",
+      "category": "Equipe e capacidade operacional",
+      "prompt": "Qual complexidade operacional a equipe está disposta a assumir?",
+      "objectiveAndImpact": "Tornar explícito o limite de operação aceitável.",
+      "affectedAreas": [
+        "Arquitetura",
+        "tecnologia"
+      ],
+      "weight": 4,
+      "responseType": "structured",
+      "responseGuidance": "Baixa/média/alta",
+      "factPath": "project.questionnaire.answers.tem-12",
+      "phase": "core",
+      "version": "1.0.0"
+    },
+    {
+      "id": "inf-01",
+      "category": "Infraestrutura e operação",
+      "prompt": "Quais ambientes são necessários para desenvolver, testar e operar?",
+      "objectiveAndImpact": "Planejar separação e promoção de artefatos.",
+      "affectedAreas": [
+        "Deployment",
+        "governança"
+      ],
+      "weight": 3,
+      "responseType": "multiChoice",
+      "responseGuidance": "Lista",
+      "factPath": "project.questionnaire.answers.inf-01",
+      "phase": "conditional",
+      "version": "1.0.0"
+    },
+    {
+      "id": "inf-02",
+      "category": "Infraestrutura e operação",
+      "prompt": "Existem padrões corporativos obrigatórios de runtime ou plataforma?",
+      "objectiveAndImpact": "Capturar restrições técnicas existentes.",
+      "affectedAreas": [
+        "Tecnologia",
+        "infraestrutura"
+      ],
+      "weight": 4,
+      "responseType": "multiChoice",
+      "responseGuidance": "Lista",
+      "factPath": "project.questionnaire.answers.inf-02",
+      "phase": "conditional",
+      "version": "1.0.0"
+    },
+    {
+      "id": "inf-03",
+      "category": "Infraestrutura e operação",
+      "prompt": "Quais limites de CPU, memória ou armazenamento se aplicam?",
+      "objectiveAndImpact": "Identificar restrições de capacidade.",
+      "affectedAreas": [
+        "Runtime",
+        "infraestrutura"
+      ],
+      "weight": 4,
+      "responseType": "structured",
+      "responseGuidance": "Valores/unidades",
+      "factPath": "project.questionnaire.answers.inf-03",
+      "phase": "core",
+      "version": "1.0.0"
+    },
+    {
+      "id": "inf-04",
+      "category": "Infraestrutura e operação",
+      "prompt": "Há dependência de hardware, rede ou instalação local específica?",
+      "objectiveAndImpact": "Avaliar portabilidade e deployment.",
+      "affectedAreas": [
+        "Infraestrutura",
+        "arquitetura"
+      ],
+      "weight": 4,
+      "responseType": "structured",
+      "responseGuidance": "Descrição",
+      "factPath": "project.questionnaire.answers.inf-04",
+      "phase": "conditional",
+      "version": "1.0.0"
+    },
+    {
+      "id": "inf-05",
+      "category": "Infraestrutura e operação",
+      "prompt": "Como os segredos e certificados serão provisionados e rotacionados?",
+      "objectiveAndImpact": "Definir integração com gestão de segredos.",
+      "affectedAreas": [
+        "Segurança",
+        "plataforma"
+      ],
+      "weight": 5,
+      "responseType": "structured",
+      "responseGuidance": "Processo/sistema existente",
+      "factPath": "project.questionnaire.answers.inf-05",
+      "phase": "conditional",
+      "version": "1.0.0"
+    },
+    {
+      "id": "inf-06",
+      "category": "Infraestrutura e operação",
+      "prompt": "Quais mecanismos de deployment e rollback estão disponíveis?",
+      "objectiveAndImpact": "Avaliar estratégias de release e recuperação.",
+      "affectedAreas": [
+        "CI/CD",
+        "operação"
+      ],
+      "weight": 4,
+      "responseType": "structured",
+      "responseGuidance": "Descrição",
+      "factPath": "project.questionnaire.answers.inf-06",
+      "phase": "conditional",
+      "version": "1.0.0"
+    },
+    {
+      "id": "inf-07",
+      "category": "Infraestrutura e operação",
+      "prompt": "É necessário executar componentes em ambientes desconectados?",
+      "objectiveAndImpact": "Identificar restrições de conectividade e operação offline.",
+      "affectedAreas": [
+        "Infraestrutura",
+        "sincronização"
+      ],
+      "weight": 4,
+      "responseType": "boolean",
+      "responseGuidance": "Sim/não/contexto",
+      "factPath": "project.questionnaire.answers.inf-07",
+      "phase": "conditional",
+      "version": "1.0.0"
+    },
+    {
+      "id": "inf-08",
+      "category": "Infraestrutura e operação",
+      "prompt": "Há restrições de sistema operacional ou arquitetura de CPU?",
+      "objectiveAndImpact": "Evitar escolhas incompatíveis com o ambiente alvo.",
+      "affectedAreas": [
+        "Runtime",
+        "tecnologia"
+      ],
+      "weight": 3,
+      "responseType": "multiChoice",
+      "responseGuidance": "Lista",
+      "factPath": "project.questionnaire.answers.inf-08",
+      "phase": "conditional",
+      "version": "1.0.0"
+    },
+    {
+      "id": "inf-09",
+      "category": "Infraestrutura e operação",
+      "prompt": "Qual nível de automação de infraestrutura é permitido ou exigido?",
+      "objectiveAndImpact": "Definir provisionamento repetível e controle de mudanças.",
+      "affectedAreas": [
+        "Infraestrutura",
+        "governança"
+      ],
+      "weight": 3,
+      "responseType": "structured",
+      "responseGuidance": "Nível",
+      "factPath": "project.questionnaire.answers.inf-09",
+      "phase": "conditional",
+      "version": "1.0.0"
+    },
+    {
+      "id": "inf-10",
+      "category": "Infraestrutura e operação",
+      "prompt": "Como serão coletadas e aplicadas atualizações de segurança?",
+      "objectiveAndImpact": "Planejar patching de runtime, imagens e dependências.",
+      "affectedAreas": [
+        "Segurança",
+        "deployment"
+      ],
+      "weight": 4,
+      "responseType": "structured",
+      "responseGuidance": "Processo",
+      "factPath": "project.questionnaire.answers.inf-10",
+      "phase": "conditional",
+      "version": "1.0.0"
+    },
+    {
+      "id": "inf-11",
+      "category": "Infraestrutura e operação",
+      "prompt": "Quais dependências de rede e DNS podem limitar comunicação entre componentes?",
+      "objectiveAndImpact": "Identificar latência, segmentação e falhas de rede.",
+      "affectedAreas": [
+        "Rede",
+        "arquitetura"
+      ],
+      "weight": 3,
+      "responseType": "structured",
+      "responseGuidance": "Restrições",
+      "factPath": "project.questionnaire.answers.inf-11",
+      "phase": "conditional",
+      "version": "1.0.0"
+    },
+    {
+      "id": "inf-12",
+      "category": "Infraestrutura e operação",
+      "prompt": "Qual orçamento mensal de infraestrutura está aprovado?",
+      "objectiveAndImpact": "Delimitar escolhas e trade-offs de operação.",
+      "affectedAreas": [
+        "Cloud",
+        "infraestrutura"
+      ],
+      "weight": 4,
+      "responseType": "structured",
+      "responseGuidance": "Valor/faixa",
+      "factPath": "project.questionnaire.answers.inf-12",
+      "phase": "core",
+      "version": "1.0.0"
+    },
+    {
+      "id": "sec-01",
+      "category": "Segurança e privacidade",
+      "prompt": "Quais tipos de dados sensíveis serão tratados?",
+      "objectiveAndImpact": "Classificar dados e aplicar controles proporcionais.",
+      "affectedAreas": [
+        "Dados",
+        "segurança"
+      ],
+      "weight": 5,
+      "responseType": "structured",
+      "responseGuidance": "Categorias",
+      "factPath": "project.questionnaire.answers.sec-01",
+      "phase": "core",
+      "version": "1.0.0"
+    },
+    {
+      "id": "sec-02",
+      "category": "Segurança e privacidade",
+      "prompt": "Quais dados pessoais são coletados e para qual finalidade?",
+      "objectiveAndImpact": "Apoiar minimização, privacidade e retenção.",
+      "affectedAreas": [
+        "Dados",
+        "governança"
+      ],
+      "weight": 5,
+      "responseType": "multiChoice",
+      "responseGuidance": "Lista/finalidade",
+      "factPath": "project.questionnaire.answers.sec-02",
+      "phase": "conditional",
+      "version": "1.0.0"
+    },
+    {
+      "id": "sec-03",
+      "category": "Segurança e privacidade",
+      "prompt": "Existem requisitos legais de localização ou residência de dados?",
+      "objectiveAndImpact": "Restringir regiões e replicação.",
+      "affectedAreas": [
+        "Cloud",
+        "dados",
+        "governança"
+      ],
+      "weight": 5,
+      "responseType": "structured",
+      "responseGuidance": "Jurisdição/Unknown",
+      "factPath": "project.questionnaire.answers.sec-03",
+      "phase": "core",
+      "version": "1.0.0"
+    },
+    {
+      "id": "sec-04",
+      "category": "Segurança e privacidade",
+      "prompt": "Como usuários e serviços devem ser autenticados?",
+      "objectiveAndImpact": "Delimitar identidade, federação e credenciais.",
+      "affectedAreas": [
+        "Identidade",
+        "segurança"
+      ],
+      "weight": 5,
+      "responseType": "structured",
+      "responseGuidance": "Requisitos existentes",
+      "factPath": "project.questionnaire.answers.sec-04",
+      "phase": "core",
+      "version": "1.0.0"
+    },
+    {
+      "id": "sec-05",
+      "category": "Segurança e privacidade",
+      "prompt": "Como serão definidas permissões para usuários, administradores e serviços?",
+      "objectiveAndImpact": "Avaliar autorização e segregação de funções.",
+      "affectedAreas": [
+        "Segurança",
+        "arquitetura"
+      ],
+      "weight": 5,
+      "responseType": "structured",
+      "responseGuidance": "Papéis/atributos",
+      "factPath": "project.questionnaire.answers.sec-05",
+      "phase": "conditional",
+      "version": "1.0.0"
+    },
+    {
+      "id": "sec-06",
+      "category": "Segurança e privacidade",
+      "prompt": "É necessário isolamento forte entre clientes ou organizações?",
+      "objectiveAndImpact": "Identificar limites de tenant e impacto de falha cruzada.",
+      "affectedAreas": [
+        "Dados",
+        "segurança"
+      ],
+      "weight": 5,
+      "responseType": "structured",
+      "responseGuidance": "Nível",
+      "factPath": "project.questionnaire.answers.sec-06",
+      "phase": "conditional",
+      "version": "1.0.0"
+    },
+    {
+      "id": "sec-07",
+      "category": "Segurança e privacidade",
+      "prompt": "Quais ameaças ou cenários de abuso são prioritários?",
+      "objectiveAndImpact": "Orientar threat modeling e controles.",
+      "affectedAreas": [
+        "Segurança",
+        "arquitetura"
+      ],
+      "weight": 4,
+      "responseType": "multiChoice",
+      "responseGuidance": "Lista/Unknown",
+      "factPath": "project.questionnaire.answers.sec-07",
+      "phase": "conditional",
+      "version": "1.0.0"
+    },
+    {
+      "id": "sec-08",
+      "category": "Segurança e privacidade",
+      "prompt": "Quais objetivos de criptografia são exigidos em trânsito e em repouso?",
+      "objectiveAndImpact": "Definir controles criptográficos e gestão de chaves.",
+      "affectedAreas": [
+        "Segurança",
+        "dados"
+      ],
+      "weight": 5,
+      "responseType": "structured",
+      "responseGuidance": "Requisito",
+      "factPath": "project.questionnaire.answers.sec-08",
+      "phase": "conditional",
+      "version": "1.0.0"
+    },
+    {
+      "id": "sec-09",
+      "category": "Segurança e privacidade",
+      "prompt": "Quais dados devem ser mascarados, anonimizados ou removidos?",
+      "objectiveAndImpact": "Definir proteção em logs, ambientes e exportações.",
+      "affectedAreas": [
+        "Dados",
+        "observabilidade"
+      ],
+      "weight": 5,
+      "responseType": "multiChoice",
+      "responseGuidance": "Lista",
+      "factPath": "project.questionnaire.answers.sec-09",
+      "phase": "conditional",
+      "version": "1.0.0"
+    },
+    {
+      "id": "sec-10",
+      "category": "Segurança e privacidade",
+      "prompt": "Quanto tempo cada categoria de dado pode ser mantida?",
+      "objectiveAndImpact": "Definir retenção, exclusão e arquivamento.",
+      "affectedAreas": [
+        "Dados",
+        "governança"
+      ],
+      "weight": 4,
+      "responseType": "structured",
+      "responseGuidance": "Prazo por categoria",
+      "factPath": "project.questionnaire.answers.sec-10",
+      "phase": "conditional",
+      "version": "1.0.0"
+    },
+    {
+      "id": "sec-11",
+      "category": "Segurança e privacidade",
+      "prompt": "Como deve ser atendida uma solicitação de exclusão de dados pessoais?",
+      "objectiveAndImpact": "Identificar propagação de exclusão e backups.",
+      "affectedAreas": [
+        "Dados",
+        "integração"
+      ],
+      "weight": 4,
+      "responseType": "structured",
+      "responseGuidance": "Processo/prazo",
+      "factPath": "project.questionnaire.answers.sec-11",
+      "phase": "conditional",
+      "version": "1.0.0"
+    },
+    {
+      "id": "sec-12",
+      "category": "Segurança e privacidade",
+      "prompt": "Quais trilhas de auditoria são obrigatórias e por quanto tempo?",
+      "objectiveAndImpact": "Definir registros imutáveis e controles de acesso.",
+      "affectedAreas": [
+        "Segurança",
+        "dados"
+      ],
+      "weight": 4,
+      "responseType": "structured",
+      "responseGuidance": "Eventos + período",
+      "factPath": "project.questionnaire.answers.sec-12",
+      "phase": "conditional",
+      "version": "1.0.0"
+    },
+    {
+      "id": "sec-13",
+      "category": "Segurança e privacidade",
+      "prompt": "Há exigência de segregação entre desenvolvimento, teste e produção?",
+      "objectiveAndImpact": "Impedir exposição ou alteração indevida entre ambientes.",
+      "affectedAreas": [
+        "Segurança",
+        "deployment"
+      ],
+      "weight": 4,
+      "responseType": "structured",
+      "responseGuidance": "Nível",
+      "factPath": "project.questionnaire.answers.sec-13",
+      "phase": "conditional",
+      "version": "1.0.0"
+    },
+    {
+      "id": "sec-14",
+      "category": "Segurança e privacidade",
+      "prompt": "Qual processo de resposta a vulnerabilidades e incidentes deve ser atendido?",
+      "objectiveAndImpact": "Alinhar arquitetura a detecção, contenção e evidências.",
+      "affectedAreas": [
+        "Segurança",
+        "operação"
+      ],
+      "weight": 4,
+      "responseType": "structured",
+      "responseGuidance": "Processo/SLA",
+      "factPath": "project.questionnaire.answers.sec-14",
+      "phase": "conditional",
+      "version": "1.0.0"
+    },
+    {
+      "id": "int-01",
+      "category": "Integrações",
+      "prompt": "Quais sistemas externos precisam ser integrados?",
+      "objectiveAndImpact": "Mapear fronteiras, proprietários e dependências.",
+      "affectedAreas": [
+        "Integração",
+        "arquitetura"
+      ],
+      "weight": 4,
+      "responseType": "multiChoice",
+      "responseGuidance": "Lista",
+      "factPath": "project.questionnaire.answers.int-01",
+      "phase": "core",
+      "version": "1.0.0"
+    },
+    {
+      "id": "int-02",
+      "category": "Integrações",
+      "prompt": "Para cada integração, há API síncrona, troca de arquivos ou eventos disponíveis?",
+      "objectiveAndImpact": "Identificar contratos e estilos de comunicação suportados.",
+      "affectedAreas": [
+        "API",
+        "mensageria"
+      ],
+      "weight": 4,
+      "responseType": "structured",
+      "responseGuidance": "Por sistema",
+      "factPath": "project.questionnaire.answers.int-02",
+      "phase": "conditional",
+      "version": "1.0.0"
+    },
+    {
+      "id": "int-03",
+      "category": "Integrações",
+      "prompt": "Qual volume e tamanho de mensagens são esperados por integração?",
+      "objectiveAndImpact": "Dimensionar payload, throughput e particionamento.",
+      "affectedAreas": [
+        "Mensageria",
+        "dados"
+      ],
+      "weight": 4,
+      "responseType": "structured",
+      "responseGuidance": "Número/unidade",
+      "factPath": "project.questionnaire.answers.int-03",
+      "phase": "conditional",
+      "version": "1.0.0"
+    },
+    {
+      "id": "int-04",
+      "category": "Integrações",
+      "prompt": "Qual latência máxima cada integração pode adicionar à jornada?",
+      "objectiveAndImpact": "Definir limites de chamadas síncronas.",
+      "affectedAreas": [
+        "Performance",
+        "rede"
+      ],
+      "weight": 4,
+      "responseType": "structured",
+      "responseGuidance": "Tempo por fluxo",
+      "factPath": "project.questionnaire.answers.int-04",
+      "phase": "conditional",
+      "version": "1.0.0"
+    },
+    {
+      "id": "int-05",
+      "category": "Integrações",
+      "prompt": "O sistema deve continuar operando quando uma integração estiver indisponível?",
+      "objectiveAndImpact": "Definir filas, cache, degradação e retomada.",
+      "affectedAreas": [
+        "Resiliência",
+        "integração"
+      ],
+      "weight": 5,
+      "responseType": "structured",
+      "responseGuidance": "Por integração",
+      "factPath": "project.questionnaire.answers.int-05",
+      "phase": "core",
+      "version": "1.0.0"
+    },
+    {
+      "id": "int-06",
+      "category": "Integrações",
+      "prompt": "Como serão tratadas retentativas e mensagens duplicadas?",
+      "objectiveAndImpact": "Definir idempotência e entrega.",
+      "affectedAreas": [
+        "Mensageria",
+        "dados"
+      ],
+      "weight": 4,
+      "responseType": "structured",
+      "responseGuidance": "Política",
+      "factPath": "project.questionnaire.answers.int-06",
+      "phase": "conditional",
+      "version": "1.0.0"
+    },
+    {
+      "id": "int-07",
+      "category": "Integrações",
+      "prompt": "É necessário preservar ordem entre mensagens ou eventos?",
+      "objectiveAndImpact": "Identificar escopo de ordenação.",
+      "affectedAreas": [
+        "Mensageria",
+        "arquitetura"
+      ],
+      "weight": 4,
+      "responseType": "structured",
+      "responseGuidance": "Por chave/fluxo",
+      "factPath": "project.questionnaire.answers.int-07",
+      "phase": "conditional",
+      "version": "1.0.0"
+    },
+    {
+      "id": "int-08",
+      "category": "Integrações",
+      "prompt": "Por quanto tempo mensagens ou eventos precisam ser retidos ou reprocessados?",
+      "objectiveAndImpact": "Diferenciar fila transitória de log de eventos.",
+      "affectedAreas": [
+        "Mensageria",
+        "dados"
+      ],
+      "weight": 4,
+      "responseType": "structured",
+      "responseGuidance": "Duração",
+      "factPath": "project.questionnaire.answers.int-08",
+      "phase": "conditional",
+      "version": "1.0.0"
+    },
+    {
+      "id": "int-09",
+      "category": "Integrações",
+      "prompt": "Quem controla a evolução dos contratos de integração?",
+      "objectiveAndImpact": "Planejar compatibilidade e versionamento.",
+      "affectedAreas": [
+        "Governança",
+        "API"
+      ],
+      "weight": 4,
+      "responseType": "structured",
+      "responseGuidance": "Responsáveis/processo",
+      "factPath": "project.questionnaire.answers.int-09",
+      "phase": "conditional",
+      "version": "1.0.0"
+    },
+    {
+      "id": "int-10",
+      "category": "Integrações",
+      "prompt": "Há requisitos de entrega imediata ou o processamento pode ser eventual?",
+      "objectiveAndImpact": "Separar resposta síncrona de conclusão de negócio.",
+      "affectedAreas": [
+        "Arquitetura",
+        "mensageria"
+      ],
+      "weight": 4,
+      "responseType": "structured",
+      "responseGuidance": "Por fluxo",
+      "factPath": "project.questionnaire.answers.int-10",
+      "phase": "conditional",
+      "version": "1.0.0"
+    },
+    {
+      "id": "int-11",
+      "category": "Integrações",
+      "prompt": "As integrações exigem autenticação mútua, assinatura ou allowlists?",
+      "objectiveAndImpact": "Identificar controles de confiança entre sistemas.",
+      "affectedAreas": [
+        "Segurança",
+        "rede"
+      ],
+      "weight": 5,
+      "responseType": "structured",
+      "responseGuidance": "Por integração",
+      "factPath": "project.questionnaire.answers.int-11",
+      "phase": "conditional",
+      "version": "1.0.0"
+    },
+    {
+      "id": "int-12",
+      "category": "Integrações",
+      "prompt": "Como falhas e divergências entre sistemas serão reconciliadas?",
+      "objectiveAndImpact": "Definir compensação, reconciliação e suporte operacional.",
+      "affectedAreas": [
+        "Dados",
+        "patterns"
+      ],
+      "weight": 4,
+      "responseType": "structured",
+      "responseGuidance": "Processo",
+      "factPath": "project.questionnaire.answers.int-12",
+      "phase": "conditional",
+      "version": "1.0.0"
+    },
+    {
+      "id": "dat-01",
+      "category": "Dados",
+      "prompt": "Quais são as principais entidades e conceitos do domínio?",
+      "objectiveAndImpact": "Descobrir modelo conceitual e limites de consistência.",
+      "affectedAreas": [
+        "DDD",
+        "dados"
+      ],
+      "weight": 4,
+      "responseType": "multiChoice",
+      "responseGuidance": "Lista/diagrama",
+      "factPath": "project.questionnaire.answers.dat-01",
+      "phase": "conditional",
+      "version": "1.0.0"
+    },
+    {
+      "id": "dat-02",
+      "category": "Dados",
+      "prompt": "Qual é o volume inicial e o crescimento anual de dados?",
+      "objectiveAndImpact": "Planejar armazenamento, retenção e custo.",
+      "affectedAreas": [
+        "Dados",
+        "infraestrutura"
+      ],
+      "weight": 4,
+      "responseType": "structured",
+      "responseGuidance": "Tamanho/período",
+      "factPath": "project.questionnaire.answers.dat-02",
+      "phase": "conditional",
+      "version": "1.0.0"
+    },
+    {
+      "id": "dat-03",
+      "category": "Dados",
+      "prompt": "Quais operações exigem consistência imediata?",
+      "objectiveAndImpact": "Identificar fronteiras transacionais críticas.",
+      "affectedAreas": [
+        "Dados",
+        "arquitetura"
+      ],
+      "weight": 5,
+      "responseType": "structured",
+      "responseGuidance": "Por operação",
+      "factPath": "project.questionnaire.answers.dat-03",
+      "phase": "core",
+      "version": "1.0.0"
+    },
+    {
+      "id": "dat-04",
+      "category": "Dados",
+      "prompt": "Onde a consistência eventual é aceitável?",
+      "objectiveAndImpact": "Identificar oportunidades e limites de processamento assíncrono.",
+      "affectedAreas": [
+        "Dados",
+        "mensageria"
+      ],
+      "weight": 4,
+      "responseType": "structured",
+      "responseGuidance": "Por fluxo",
+      "factPath": "project.questionnaire.answers.dat-04",
+      "phase": "core",
+      "version": "1.0.0"
+    },
+    {
+      "id": "dat-05",
+      "category": "Dados",
+      "prompt": "Existem consultas analíticas ou relatórios que divergem das consultas transacionais?",
+      "objectiveAndImpact": "Avaliar modelos de leitura e separação de cargas.",
+      "affectedAreas": [
+        "Dados",
+        "CQRS",
+        "analytics"
+      ],
+      "weight": 3,
+      "responseType": "structured",
+      "responseGuidance": "Cenários",
+      "factPath": "project.questionnaire.answers.dat-05",
+      "phase": "conditional",
+      "version": "1.0.0"
+    },
+    {
+      "id": "dat-06",
+      "category": "Dados",
+      "prompt": "Qual retenção é necessária para cada classe de dado?",
+      "objectiveAndImpact": "Planejar arquivamento, exclusão e custos.",
+      "affectedAreas": [
+        "Dados",
+        "governança"
+      ],
+      "weight": 4,
+      "responseType": "structured",
+      "responseGuidance": "Prazo por classe",
+      "factPath": "project.questionnaire.answers.dat-06",
+      "phase": "conditional",
+      "version": "1.0.0"
+    },
+    {
+      "id": "dat-07",
+      "category": "Dados",
+      "prompt": "Quais dados precisam de backup e com qual granularidade?",
+      "objectiveAndImpact": "Definir estratégia de proteção e restauração.",
+      "affectedAreas": [
+        "Dados",
+        "disponibilidade"
+      ],
+      "weight": 5,
+      "responseType": "structured",
+      "responseGuidance": "Por conjunto",
+      "factPath": "project.questionnaire.answers.dat-07",
+      "phase": "conditional",
+      "version": "1.0.0"
+    },
+    {
+      "id": "dat-08",
+      "category": "Dados",
+      "prompt": "É necessário histórico completo de alterações ou auditoria de estado?",
+      "objectiveAndImpact": "Avaliar trilha de auditoria e event sourcing sem presumir sua adoção.",
+      "affectedAreas": [
+        "Dados",
+        "governança"
+      ],
+      "weight": 4,
+      "responseType": "structured",
+      "responseGuidance": "Necessidade",
+      "factPath": "project.questionnaire.answers.dat-08",
+      "phase": "conditional",
+      "version": "1.0.0"
+    },
+    {
+      "id": "dat-09",
+      "category": "Dados",
+      "prompt": "Quais regras de integridade precisam ser garantidas entre entidades?",
+      "objectiveAndImpact": "Definir limites transacionais e validação.",
+      "affectedAreas": [
+        "Dados",
+        "DDD"
+      ],
+      "weight": 4,
+      "responseType": "multiChoice",
+      "responseGuidance": "Lista",
+      "factPath": "project.questionnaire.answers.dat-09",
+      "phase": "conditional",
+      "version": "1.0.0"
+    },
+    {
+      "id": "dat-10",
+      "category": "Dados",
+      "prompt": "Há necessidade de pesquisa textual, geoespacial ou por similaridade?",
+      "objectiveAndImpact": "Identificar requisitos especializados de consulta.",
+      "affectedAreas": [
+        "Dados",
+        "busca"
+      ],
+      "weight": 3,
+      "responseType": "structured",
+      "responseGuidance": "Tipos de consulta",
+      "factPath": "project.questionnaire.answers.dat-10",
+      "phase": "conditional",
+      "version": "1.0.0"
+    },
+    {
+      "id": "dat-11",
+      "category": "Dados",
+      "prompt": "Há dados que precisam ser compartilhados entre domínios ou equipes?",
+      "objectiveAndImpact": "Descobrir ownership e contratos de dados.",
+      "affectedAreas": [
+        "Arquitetura",
+        "integração"
+      ],
+      "weight": 4,
+      "responseType": "multiChoice",
+      "responseGuidance": "Lista/ownership",
+      "factPath": "project.questionnaire.answers.dat-11",
+      "phase": "conditional",
+      "version": "1.0.0"
+    },
+    {
+      "id": "dat-12",
+      "category": "Dados",
+      "prompt": "Como ocorrerá a migração de dados de sistemas existentes?",
+      "objectiveAndImpact": "Dimensionar coexistência, qualidade e corte.",
+      "affectedAreas": [
+        "Dados",
+        "integração"
+      ],
+      "weight": 4,
+      "responseType": "structured",
+      "responseGuidance": "Estratégia/volume",
+      "factPath": "project.questionnaire.answers.dat-12",
+      "phase": "conditional",
+      "version": "1.0.0"
+    },
+    {
+      "id": "dat-13",
+      "category": "Dados",
+      "prompt": "Há requisitos de exportação, portabilidade ou interoperabilidade de dados?",
+      "objectiveAndImpact": "Evitar formatos fechados e dependência indevida.",
+      "affectedAreas": [
+        "Dados",
+        "governança"
+      ],
+      "weight": 3,
+      "responseType": "structured",
+      "responseGuidance": "Formatos/padrões",
+      "factPath": "project.questionnaire.answers.dat-13",
+      "phase": "conditional",
+      "version": "1.0.0"
+    },
+    {
+      "id": "dat-14",
+      "category": "Dados",
+      "prompt": "Qual nível de perda ou duplicidade de dados é tolerável em falhas?",
+      "objectiveAndImpact": "Definir idempotência, reconciliação e RPO.",
+      "affectedAreas": [
+        "Dados",
+        "disponibilidade"
+      ],
+      "weight": 5,
+      "responseType": "structured",
+      "responseGuidance": "Por dado/fluxo",
+      "factPath": "project.questionnaire.answers.dat-14",
+      "phase": "conditional",
+      "version": "1.0.0"
+    },
+    {
+      "id": "per-01",
+      "category": "Performance",
+      "prompt": "Qual é o tempo de resposta esperado para cada jornada crítica?",
+      "objectiveAndImpact": "Definir SLOs de latência por operação.",
+      "affectedAreas": [
+        "Runtime",
+        "API",
+        "dados"
+      ],
+      "weight": 5,
+      "responseType": "structured",
+      "responseGuidance": "Percentis/tempo",
+      "factPath": "project.questionnaire.answers.per-01",
+      "phase": "core",
+      "version": "1.0.0"
+    },
+    {
+      "id": "per-02",
+      "category": "Performance",
+      "prompt": "Quais percentis de latência devem ser atendidos?",
+      "objectiveAndImpact": "Evitar metas baseadas apenas em média.",
+      "affectedAreas": [
+        "Observabilidade",
+        "runtime"
+      ],
+      "weight": 4,
+      "responseType": "structured",
+      "responseGuidance": "p50/p95/p99",
+      "factPath": "project.questionnaire.answers.per-02",
+      "phase": "core",
+      "version": "1.0.0"
+    },
+    {
+      "id": "per-03",
+      "category": "Performance",
+      "prompt": "Quais operações são limitadas por CPU, memória, I/O ou rede?",
+      "objectiveAndImpact": "Direcionar testes e desenho de capacidade.",
+      "affectedAreas": [
+        "Runtime",
+        "infraestrutura"
+      ],
+      "weight": 3,
+      "responseType": "structured",
+      "responseGuidance": "Medição/estimativa",
+      "factPath": "project.questionnaire.answers.per-03",
+      "phase": "conditional",
+      "version": "1.0.0"
+    },
+    {
+      "id": "per-04",
+      "category": "Performance",
+      "prompt": "Há processamento pesado que pode ocorrer fora da requisição do usuário?",
+      "objectiveAndImpact": "Identificar jobs e feedback assíncrono.",
+      "affectedAreas": [
+        "Mensageria",
+        "arquitetura"
+      ],
+      "weight": 4,
+      "responseType": "structured",
+      "responseGuidance": "Por operação",
+      "factPath": "project.questionnaire.answers.per-04",
+      "phase": "conditional",
+      "version": "1.0.0"
+    },
+    {
+      "id": "per-05",
+      "category": "Performance",
+      "prompt": "Qual tamanho máximo de resposta é aceitável para clientes e rede?",
+      "objectiveAndImpact": "Definir paginação, streaming e payload.",
+      "affectedAreas": [
+        "API",
+        "rede"
+      ],
+      "weight": 3,
+      "responseType": "structured",
+      "responseGuidance": "Tamanho",
+      "factPath": "project.questionnaire.answers.per-05",
+      "phase": "conditional",
+      "version": "1.0.0"
+    },
+    {
+      "id": "per-06",
+      "category": "Performance",
+      "prompt": "Há requisitos de streaming ou atualização contínua para o usuário?",
+      "objectiveAndImpact": "Identificar conexões persistentes e backpressure.",
+      "affectedAreas": [
+        "Rede",
+        "runtime"
+      ],
+      "weight": 3,
+      "responseType": "structured",
+      "responseGuidance": "Cenário",
+      "factPath": "project.questionnaire.answers.per-06",
+      "phase": "conditional",
+      "version": "1.0.0"
+    },
+    {
+      "id": "per-07",
+      "category": "Performance",
+      "prompt": "O sistema precisa responder sob carga degradada ou rejeitar excesso?",
+      "objectiveAndImpact": "Planejar limites, filas e proteção contra overload.",
+      "affectedAreas": [
+        "Resiliência",
+        "API"
+      ],
+      "weight": 4,
+      "responseType": "structured",
+      "responseGuidance": "Política",
+      "factPath": "project.questionnaire.answers.per-07",
+      "phase": "conditional",
+      "version": "1.0.0"
+    },
+    {
+      "id": "per-08",
+      "category": "Performance",
+      "prompt": "Quais operações podem usar cache sem comprometer correção?",
+      "objectiveAndImpact": "Entender validade, expiração e invalidação.",
+      "affectedAreas": [
+        "Cache",
+        "dados"
+      ],
+      "weight": 3,
+      "responseType": "structured",
+      "responseGuidance": "Por dado",
+      "factPath": "project.questionnaire.answers.per-08",
+      "phase": "conditional",
+      "version": "1.0.0"
+    },
+    {
+      "id": "per-09",
+      "category": "Performance",
+      "prompt": "Qual duração de cálculo ou processamento em lote é aceitável?",
+      "objectiveAndImpact": "Definir janela de trabalho e paralelismo.",
+      "affectedAreas": [
+        "Compute",
+        "dados"
+      ],
+      "weight": 3,
+      "responseType": "structured",
+      "responseGuidance": "Tempo/volume",
+      "factPath": "project.questionnaire.answers.per-09",
+      "phase": "conditional",
+      "version": "1.0.0"
+    },
+    {
+      "id": "per-10",
+      "category": "Performance",
+      "prompt": "Há metas distintas para leitura, escrita e busca?",
+      "objectiveAndImpact": "Separar perfis de carga e modelo de consulta.",
+      "affectedAreas": [
+        "Dados",
+        "performance"
+      ],
+      "weight": 4,
+      "responseType": "structured",
+      "responseGuidance": "Por operação",
+      "factPath": "project.questionnaire.answers.per-10",
+      "phase": "conditional",
+      "version": "1.0.0"
+    },
+    {
+      "id": "per-11",
+      "category": "Performance",
+      "prompt": "Como serão testadas as metas de performance antes de produção?",
+      "objectiveAndImpact": "Tornar metas verificáveis e reproduzíveis.",
+      "affectedAreas": [
+        "Testes",
+        "observabilidade"
+      ],
+      "weight": 3,
+      "responseType": "structured",
+      "responseGuidance": "Método/frequência",
+      "factPath": "project.questionnaire.answers.per-11",
+      "phase": "conditional",
+      "version": "1.0.0"
+    },
+    {
+      "id": "per-12",
+      "category": "Performance",
+      "prompt": "Que degradação de latência é aceitável durante picos?",
+      "objectiveAndImpact": "Explicitar trade-off entre capacidade e custo.",
+      "affectedAreas": [
+        "Escalabilidade",
+        "cloud"
+      ],
+      "weight": 3,
+      "responseType": "structured",
+      "responseGuidance": "Limite/Unknown",
+      "factPath": "project.questionnaire.answers.per-12",
+      "phase": "conditional",
+      "version": "1.0.0"
+    },
+    {
+      "id": "cld-01",
+      "category": "Cloud e implantação",
+      "prompt": "Existe provedor ou ambiente de hospedagem obrigatório?",
+      "objectiveAndImpact": "Capturar restrição real sem pressupor fornecedor.",
+      "affectedAreas": [
+        "Cloud",
+        "infraestrutura"
+      ],
+      "weight": 4,
+      "responseType": "structured",
+      "responseGuidance": "Opção/Unknown",
+      "factPath": "project.questionnaire.answers.cld-01",
+      "phase": "core",
+      "version": "1.0.0"
+    },
+    {
+      "id": "cld-02",
+      "category": "Cloud e implantação",
+      "prompt": "Há exigência de executar on-premises, em cloud pública ou em modelo híbrido?",
+      "objectiveAndImpact": "Definir portabilidade e limites operacionais.",
+      "affectedAreas": [
+        "Deployment",
+        "arquitetura"
+      ],
+      "weight": 4,
+      "responseType": "structured",
+      "responseGuidance": "Opção",
+      "factPath": "project.questionnaire.answers.cld-02",
+      "phase": "conditional",
+      "version": "1.0.0"
+    },
+    {
+      "id": "cld-03",
+      "category": "Cloud e implantação",
+      "prompt": "Quais serviços gerenciados são permitidos ou proibidos?",
+      "objectiveAndImpact": "Avaliar responsabilidade operacional e lock-in.",
+      "affectedAreas": [
+        "Cloud",
+        "governança"
+      ],
+      "weight": 4,
+      "responseType": "multiChoice",
+      "responseGuidance": "Lista",
+      "factPath": "project.questionnaire.answers.cld-03",
+      "phase": "conditional",
+      "version": "1.0.0"
+    },
+    {
+      "id": "cld-04",
+      "category": "Cloud e implantação",
+      "prompt": "Há necessidade de portabilidade entre provedores ou ambientes?",
+      "objectiveAndImpact": "Definir importância e escopo de portabilidade.",
+      "affectedAreas": [
+        "Cloud",
+        "arquitetura"
+      ],
+      "weight": 3,
+      "responseType": "structured",
+      "responseGuidance": "Nível/razão",
+      "factPath": "project.questionnaire.answers.cld-04",
+      "phase": "conditional",
+      "version": "1.0.0"
+    },
+    {
+      "id": "cld-05",
+      "category": "Cloud e implantação",
+      "prompt": "Quais zonas ou regiões podem armazenar e processar dados?",
+      "objectiveAndImpact": "Restringir implantação por latência ou legislação.",
+      "affectedAreas": [
+        "Cloud",
+        "dados"
+      ],
+      "weight": 5,
+      "responseType": "multiChoice",
+      "responseGuidance": "Lista/Unknown",
+      "factPath": "project.questionnaire.answers.cld-05",
+      "phase": "conditional",
+      "version": "1.0.0"
+    },
+    {
+      "id": "cld-06",
+      "category": "Cloud e implantação",
+      "prompt": "Há conectividade privada obrigatória com redes corporativas?",
+      "objectiveAndImpact": "Identificar topologia, DNS e segurança de rede.",
+      "affectedAreas": [
+        "Cloud",
+        "segurança"
+      ],
+      "weight": 4,
+      "responseType": "structured",
+      "responseGuidance": "Requisito",
+      "factPath": "project.questionnaire.answers.cld-06",
+      "phase": "conditional",
+      "version": "1.0.0"
+    },
+    {
+      "id": "cld-07",
+      "category": "Cloud e implantação",
+      "prompt": "Qual modelo de custo (fixo, variável ou híbrido) é aceitável?",
+      "objectiveAndImpact": "Orientar trade-off de elasticidade e capacidade reservada.",
+      "affectedAreas": [
+        "Cloud",
+        "governança"
+      ],
+      "weight": 3,
+      "responseType": "structured",
+      "responseGuidance": "Preferência/limites",
+      "factPath": "project.questionnaire.answers.cld-07",
+      "phase": "conditional",
+      "version": "1.0.0"
+    },
+    {
+      "id": "cld-08",
+      "category": "Cloud e implantação",
+      "prompt": "Existem restrições de licenciamento ou aquisição de serviços?",
+      "objectiveAndImpact": "Evitar opções inviáveis por contrato.",
+      "affectedAreas": [
+        "Governança",
+        "tecnologia"
+      ],
+      "weight": 4,
+      "responseType": "multiChoice",
+      "responseGuidance": "Lista",
+      "factPath": "project.questionnaire.answers.cld-08",
+      "phase": "conditional",
+      "version": "1.0.0"
+    },
+    {
+      "id": "cld-09",
+      "category": "Cloud e implantação",
+      "prompt": "Como ambientes são provisionados e removidos?",
+      "objectiveAndImpact": "Definir automação e isolamento.",
+      "affectedAreas": [
+        "Infraestrutura",
+        "CI/CD"
+      ],
+      "weight": 3,
+      "responseType": "structured",
+      "responseGuidance": "Processo",
+      "factPath": "project.questionnaire.answers.cld-09",
+      "phase": "conditional",
+      "version": "1.0.0"
+    },
+    {
+      "id": "cld-10",
+      "category": "Cloud e implantação",
+      "prompt": "Quais dependências precisam continuar funcionando fora do provedor?",
+      "objectiveAndImpact": "Delimitar estratégia de saída e portabilidade.",
+      "affectedAreas": [
+        "Cloud",
+        "dados"
+      ],
+      "weight": 3,
+      "responseType": "multiChoice",
+      "responseGuidance": "Lista",
+      "factPath": "project.questionnaire.answers.cld-10",
+      "phase": "conditional",
+      "version": "1.0.0"
+    },
+    {
+      "id": "gov-01",
+      "category": "Governança e compliance",
+      "prompt": "Quais normas, auditorias ou certificações precisam ser atendidas?",
+      "objectiveAndImpact": "Identificar controles e evidências obrigatórias.",
+      "affectedAreas": [
+        "Segurança",
+        "operação"
+      ],
+      "weight": 5,
+      "responseType": "multiChoice",
+      "responseGuidance": "Lista/Unknown",
+      "factPath": "project.questionnaire.answers.gov-01",
+      "phase": "core",
+      "version": "1.0.0"
+    },
+    {
+      "id": "gov-02",
+      "category": "Governança e compliance",
+      "prompt": "Quem aprova decisões de arquitetura e exceções?",
+      "objectiveAndImpact": "Definir fluxo de governança sem bloquear responsabilidade.",
+      "affectedAreas": [
+        "Arquitetura",
+        "processo"
+      ],
+      "weight": 3,
+      "responseType": "structured",
+      "responseGuidance": "Papéis",
+      "factPath": "project.questionnaire.answers.gov-02",
+      "phase": "conditional",
+      "version": "1.0.0"
+    },
+    {
+      "id": "gov-03",
+      "category": "Governança e compliance",
+      "prompt": "Quais decisões precisam de aprovação formal antes da implantação?",
+      "objectiveAndImpact": "Identificar gates e rastreabilidade necessária.",
+      "affectedAreas": [
+        "Deployment",
+        "compliance"
+      ],
+      "weight": 4,
+      "responseType": "multiChoice",
+      "responseGuidance": "Lista",
+      "factPath": "project.questionnaire.answers.gov-03",
+      "phase": "conditional",
+      "version": "1.0.0"
+    },
+    {
+      "id": "gov-04",
+      "category": "Governança e compliance",
+      "prompt": "Quais componentes ou versões são proibidos pela organização?",
+      "objectiveAndImpact": "Capturar políticas técnicas existentes.",
+      "affectedAreas": [
+        "Tecnologia",
+        "segurança"
+      ],
+      "weight": 5,
+      "responseType": "multiChoice",
+      "responseGuidance": "Lista",
+      "factPath": "project.questionnaire.answers.gov-04",
+      "phase": "conditional",
+      "version": "1.0.0"
+    },
+    {
+      "id": "gov-05",
+      "category": "Governança e compliance",
+      "prompt": "Como devem ser registradas e revistas exceções às políticas?",
+      "objectiveAndImpact": "Planejar ADRs, validade e responsáveis.",
+      "affectedAreas": [
+        "Governança",
+        "ADR"
+      ],
+      "weight": 4,
+      "responseType": "structured",
+      "responseGuidance": "Processo",
+      "factPath": "project.questionnaire.answers.gov-05",
+      "phase": "conditional",
+      "version": "1.0.0"
+    },
+    {
+      "id": "gov-06",
+      "category": "Governança e compliance",
+      "prompt": "Há exigência de evidência sobre origem e versão das dependências?",
+      "objectiveAndImpact": "Identificar SBOM, proveniência e controles de supply chain.",
+      "affectedAreas": [
+        "Segurança",
+        "CI/CD"
+      ],
+      "weight": 4,
+      "responseType": "structured",
+      "responseGuidance": "Requisito",
+      "factPath": "project.questionnaire.answers.gov-06",
+      "phase": "conditional",
+      "version": "1.0.0"
+    },
+    {
+      "id": "gov-07",
+      "category": "Governança e compliance",
+      "prompt": "Quais métricas de custo precisam ser atribuídas a equipes ou produtos?",
+      "objectiveAndImpact": "Avaliar tagging, limites e accountability de custo.",
+      "affectedAreas": [
+        "Cloud",
+        "governança"
+      ],
+      "weight": 3,
+      "responseType": "structured",
+      "responseGuidance": "Modelo",
+      "factPath": "project.questionnaire.answers.gov-07",
+      "phase": "conditional",
+      "version": "1.0.0"
+    },
+    {
+      "id": "gov-08",
+      "category": "Governança e compliance",
+      "prompt": "Com que frequência requisitos regulatórios e decisões devem ser revisados?",
+      "objectiveAndImpact": "Definir ciclo de revisão e atualização de conhecimento.",
+      "affectedAreas": [
+        "Governança",
+        "documentação"
+      ],
+      "weight": 3,
+      "responseType": "structured",
+      "responseGuidance": "Frequência",
+      "factPath": "project.questionnaire.answers.gov-08",
+      "phase": "conditional",
+      "version": "1.0.0"
+    }
+  ]
+}

@@ -1,0 +1,104 @@
+ETAPA 09 — EXPERIÊNCIA DA APLICAÇÃO E ESPECIFICAÇÃO DE TELAS
+
+## Objetivo
+
+Especificar a experiência web do Architecture Decision Assistant de forma
+implementável, respeitando o domínio, a arquitetura em camadas e o escopo
+incremental do produto. Esta etapa é de especificação: não implementar UI,
+handlers, persistência ou geração de artefatos.
+
+## Referência normativa
+
+O documento [application-experience.md](../docs/application-experience.md)
+define:
+
+- mapa de navegação, telas, wireframes textuais, componentes e estados;
+- fluxos de criação/edição de projeto, requisitos, questionário, interpretação,
+  análise, comparação, grafo, diagramas e decisões;
+- limites de escopo para ADR e histórico de projetos;
+- responsabilidades de Web, Application, Domain e Infrastructure;
+- contratos de interação, persistência JSON, erros e critérios de aceite.
+
+As especificações de domínio continuam sendo a autoridade para regras e
+semântica:
+
+- [domain-model.md](../docs/domain-model.md);
+- [architectural-questionnaire.md](../docs/architectural-questionnaire.md);
+- [requirement-text-interpretation.md](../docs/requirement-text-interpretation.md);
+- [rule-engine.md](../docs/rule-engine.md);
+- [graph-dependency-model.md](../docs/graph-dependency-model.md);
+- [diagram-generation.md](../docs/diagram-generation.md).
+
+## Decisões de produto e arquitetura
+
+1. A interface apresenta dados e coleta intenção; não calcula adequação,
+   aplica regras, interpreta texto, resolve relações, valida invariantes ou
+   decide topologia.
+2. Toda ação de domínio é enviada a um caso de uso da Application. A UI não
+   acessa repositórios, arquivos, schemas ou catálogo diretamente.
+3. Só fatos confirmados alimentam regras. Hipóteses lexicais e respostas
+   desconhecidas, provisórias, negadas ou rejeitadas permanecem distintas.
+4. Recomendações, dependências e relações do grafo nunca se tornam decisão
+   confirmada por navegação, comparação ou exibição.
+5. Diagramas são projeções explícitas, versionadas e reativas em sessão; não
+   inventam elementos ou conexões. Layout é apresentação, não domínio.
+6. Projetos e conhecimento continuam em arquivos JSON, sem banco. Não usar
+   IA em runtime, modelos generativos, OpenAI ou Azure OpenAI.
+7. ADRs completos e busca/reuso de projetos anteriores são capacidades
+   posteriores (etapas 10 e 11), não controles que aparentem estar funcionais
+   nesta etapa.
+
+## Escopo
+
+- Especificar a experiência para o fluxo principal e as telas necessárias,
+  incluindo os oito painéis inicialmente solicitados.
+- Marcar capacidades cujo modelo já está especificado, mas cuja entrega
+  depende de etapas anteriores ou posteriores.
+- Não definir um contrato JSON concorrente para estado transitório da UI.
+- O schema do arquivo de Projeto, política de migração e localização do
+  workspace devem ser fechados na etapa 12 antes da implementação.
+
+## Critérios de aceite
+
+1. Cada tela tem objetivo, entradas, ações permitidas, estados e resultado
+   explícitos.
+2. Toda ação com regra de negócio tem caso de uso Application responsável;
+   componentes Blazor limitam-se a apresentação, validação de formato local e
+   encaminhamento da intenção.
+3. Dados desconhecidos, incompletos, defasados, inválidos e não avaliados não
+   são apresentados como respostas negativas, sucesso ou recomendação.
+4. Nenhuma hipótese lexical não confirmada alimenta uma análise; a confirmação
+   é explícita, individualizável e rastreável.
+5. Scores, evidências, grafo e diagramas exibem proveniência, versão e limites
+   já definidos nos respectivos contratos.
+6. ADR e projetos anteriores aparecem como capacidades futuras, sem botões
+   falsos, dados inventados ou navegação que sugira disponibilidade.
+7. Erros de validação, catálogo, concorrência, leitura e gravação são
+   compreensíveis, acionáveis e não descartam o trabalho do usuário.
+8. A especificação respeita JSON local, ausência de banco e ausência de
+   inferência generativa em runtime.
+9. Os wireframes e critérios de [application-experience.md](../docs/application-experience.md)
+   podem ser usados para derivar testes de navegação e de contrato sem
+   transferir regras para a UI.
+
+## Trade-offs
+
+| Decisão | Benefício | Custo / risco |
+|---|---|---|
+| Workspace por projeto, com páginas focadas | Menos sobrecarga que colocar todos os painéis em uma única tela | Exige navegação entre etapas e contexto persistente |
+| Explicações e estados de lacuna visíveis | Evita certeza artificial e facilita revisão | Telas podem ter mais conteúdo que um dashboard simplificado |
+| Capacidades futuras não simuladas | Mantém expectativas e contratos verdadeiros | ADR/histórico não podem ser demonstrados antes das etapas próprias |
+| Estado visual transitório separado de JSON de domínio | Evita persistir filtros, seleção de aba ou rascunhos efêmeros como decisões | O schema do Projeto ainda precisa ser concluído na etapa 12 |
+
+## Alternativas rejeitadas
+
+- Um dashboard único com oito painéis sempre abertos: difícil de usar e
+  mistura captura, decisão e artefatos de diferentes níveis.
+- Regras de negócio em eventos de componentes ou code-behind: viola Clean
+  Architecture e dificulta teste independente.
+- Autosalvar cada tecla ou persistir previews: gera gravações e revisões
+  ruidosas, além de misturar estado transitório com snapshots.
+- Criar diagramas, requisitos, ADRs ou decisões por inferência silenciosa:
+  contradiz as etapas 06–08 e o limite de responsabilidade humana.
+- Expor telas de ADR/histórico como se completas fossem: antecipa escopo das
+  etapas 10 e 11 e cria promessa não suportada.

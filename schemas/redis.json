@@ -1,0 +1,32 @@
+{
+  "id": "redis",
+  "kind": "Technology",
+  "schemaVersion": "1.0",
+  "version": "1.0.0",
+  "name": "Redis",
+  "description": "Armazenamento de dados em memória com estruturas de dados e opções de persistência, frequentemente utilizado para cache, coordenação e processamento de mensagens.",
+  "category": "In-memory Data Store",
+  "tags": ["cache", "data-store", "in-memory"],
+  "capabilities": [
+    "Acesso de baixa latência a estruturas de dados em memória.",
+    "Expiração de chaves adequada a alguns padrões de cache.",
+    "Recursos adicionais dependentes da configuração e da distribuição adotadas."
+  ],
+  "useWhen": [
+    "Há caso de uso claro para cache ou estruturas em memória.",
+    "A equipe definiu limites de expiração, invalidação e consistência apropriados."
+  ],
+  "avoidWhen": [
+    "A aplicação precisa de uma fonte de verdade durável sem avaliar persistência e recuperação.",
+    "Não há estratégia para invalidação, memória, alta disponibilidade ou operação."
+  ],
+  "benefits": [
+    "Pode reduzir latência e carga sobre sistemas de origem em cenários apropriados."
+  ],
+  "risks": [
+    "Cache pode introduzir dados obsoletos e problemas de invalidação.",
+    "Uso de memória e configuração de persistência afetam custo e durabilidade."
+  ],
+  "complexity": 5,
+  "operationalCost": 5
+}

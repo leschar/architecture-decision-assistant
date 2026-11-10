@@ -1,0 +1,228 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "C4 diagram snapshot",
+  "description": "Renderer-independent, provenance-aware diagram projection. Semantic consistency and level constraints require validation beyond JSON Schema.",
+  "oneOf": [
+    { "$ref": "#/$defs/contextDiagram" },
+    { "$ref": "#/$defs/containerDiagram" },
+    { "$ref": "#/$defs/componentDiagram" }
+  ],
+  "$defs": {
+    "sourceReference": {
+      "type": "object",
+      "required": ["sourceType", "sourceId"],
+      "properties": {
+        "sourceType": {
+          "type": "string",
+          "enum": [
+            "Requirement",
+            "Decision",
+            "RuleEvaluation",
+            "KnowledgeRelation",
+            "KnowledgeItem",
+            "StructuralModel",
+            "ManualInput"
+          ]
+        },
+        "sourceId": { "type": "string", "minLength": 1 },
+        "sourceVersion": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": false
+    },
+    "element": {
+      "type": "object",
+      "required": [
+        "id",
+        "elementType",
+        "name",
+        "description",
+        "status",
+        "provenance"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]*$"
+        },
+        "elementType": {
+          "type": "string",
+          "enum": ["Person", "SoftwareSystem", "Container", "Component"]
+        },
+        "name": { "type": "string", "minLength": 1 },
+        "description": { "type": "string", "minLength": 1 },
+        "technology": { "type": "string", "minLength": 1 },
+        "tags": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "status": {
+          "type": "string",
+          "enum": ["Confirmed", "Proposed", "Unresolved"]
+        },
+        "parentId": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]*$"
+        },
+        "provenance": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/sourceReference" }
+        }
+      },
+      "additionalProperties": false
+    },
+    "connection": {
+      "type": "object",
+      "required": [
+        "id",
+        "sourceId",
+        "targetId",
+        "description",
+        "interactionType",
+        "status",
+        "provenance"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]*$"
+        },
+        "sourceId": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]*$"
+        },
+        "targetId": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]*$"
+        },
+        "description": { "type": "string", "minLength": 1 },
+        "interactionType": {
+          "type": "string",
+          "enum": [
+            "Synchronous",
+            "AsynchronousCommand",
+            "AsynchronousEvent",
+            "BatchTransfer",
+            "Unknown"
+          ]
+        },
+        "protocol": { "type": "string", "minLength": 1 },
+        "messageName": { "type": "string", "minLength": 1 },
+        "status": {
+          "type": "string",
+          "enum": ["Confirmed", "Proposed", "Unresolved"]
+        },
+        "provenance": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/sourceReference" }
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "interactionType": { "const": "AsynchronousEvent" }
+            },
+            "required": ["interactionType"]
+          },
+          "then": { "required": ["messageName"] }
+        }
+      ],
+      "additionalProperties": false
+    },
+    "baseDiagram": {
+      "type": "object",
+      "required": [
+        "schemaVersion",
+        "diagramId",
+        "diagramType",
+        "projectId",
+        "projectRevision",
+        "sourceFingerprint",
+        "generatorVersion",
+        "generatedAt",
+        "scopeId",
+        "title",
+        "status",
+        "elements",
+        "connections",
+        "warnings"
+      ],
+      "properties": {
+        "schemaVersion": { "const": "1.0" },
+        "diagramId": { "type": "string", "minLength": 1 },
+        "diagramType": {
+          "type": "string",
+          "enum": ["Context", "Container", "Component"]
+        },
+        "projectId": { "type": "string", "format": "uuid" },
+        "projectRevision": { "type": "string", "minLength": 1 },
+        "sourceFingerprint": {
+          "type": "string",
+          "pattern": "^sha256:[a-f0-9]{64}$"
+        },
+        "generatorVersion": {
+          "type": "string",
+          "pattern": "^\\d+\\.\\d+\\.\\d+$"
+        },
+        "generatedAt": { "type": "string", "format": "date-time" },
+        "scopeId": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]*$"
+        },
+        "title": { "type": "string", "minLength": 1 },
+        "status": {
+          "type": "string",
+          "enum": ["Complete", "Incomplete", "Stale"]
+        },
+        "elements": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/element" }
+        },
+        "connections": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/connection" }
+        },
+        "warnings": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "contextDiagram": {
+      "allOf": [
+        { "$ref": "#/$defs/baseDiagram" },
+        {
+          "type": "object",
+          "properties": {
+            "diagramType": { "const": "Context" }
+          }
+        }
+      ]
+    },
+    "containerDiagram": {
+      "allOf": [
+        { "$ref": "#/$defs/baseDiagram" },
+        {
+          "type": "object",
+          "properties": {
+            "diagramType": { "const": "Container" }
+          }
+        }
+      ]
+    },
+    "componentDiagram": {
+      "allOf": [
+        { "$ref": "#/$defs/baseDiagram" },
+        {
+          "type": "object",
+          "properties": {
+            "diagramType": { "const": "Component" }
+          }
+        }
+      ]
+    }
+  }
+}

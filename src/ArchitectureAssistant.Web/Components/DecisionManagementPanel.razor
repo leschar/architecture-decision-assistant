@@ -1,0 +1,554 @@
+@using System.ComponentModel.DataAnnotations
+@using System.Globalization
+@using ArchitectureAssistant.Application.Analysis
+@using ArchitectureAssistant.Application.Projects
+@using ArchitectureAssistant.Domain.Analysis
+@using ArchitectureAssistant.Domain.KnowledgeGraph
+@using ArchitectureAssistant.Domain.Projects
+@using MediatR
+@inject ISender Sender
+
+<section class="panel decision-panel" aria-labelledby="decisions-heading">
+    <div class="panel-heading">
+        <div>
+            <p class="eyebrow">ESCOLHA HUMANA</p>
+            <h2 id="decisions-heading">Decisões e comparação</h2>
+        </div>
+        <span class="count-badge">@Project.Decisions.Count</span>
+    </div>
+    <p>Comparar ou abrir uma opção não cria decisão. Registrar cria uma proposta; aceitar ou rejeitar exige ação explícita.</p>
+
+    @if (_errors.Count > 0)
+    {
+        <div class="alert alert-danger" role="alert">
+            <ul class="mb-0">
+                @foreach (var error in _errors)
+                {
+                    <li>@error</li>
+                }
+            </ul>
+        </div>
+    }
+
+    @if (!string.IsNullOrWhiteSpace(_notice))
+    {
+        <p role="status">@_notice</p>
+    }
+
+    @if (Analyses.Count == 0)
+    {
+        <p class="empty-state">Execute uma análise para comparar candidatos ou registrar uma decisão contextualizada.</p>
+    }
+    else
+    {
+        <div class="section-heading">
+            <div>
+                <p class="eyebrow">COMPARAÇÃO READ-ONLY</p>
+                <h3>Comparar candidatos</h3>
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="field">
+                <label for="comparison-analysis">Análise</label>
+                <select id="comparison-analysis" class="form-select" @bind="_comparisonAnalysisId" @bind:after="ChangeComparisonAnalysis">
+                    @foreach (var item in Analyses)
+                    {
+                        <option value="@item.Snapshot.AnalysisId">
+                            @item.Snapshot.CreatedAt.ToLocalTime().ToString("g", CultureInfo.CurrentCulture)
+                            @(item.IsOutdated ? " (desatualizada)" : string.Empty)
+                        </option>
+                    }
+                </select>
+            </div>
+            <div class="field">
+                <label for="comparison-kind">Tipo comparável</label>
+                <select id="comparison-kind" class="form-select" @bind="_comparisonKind" @bind:after="ChangeComparisonKind">
+                    @foreach (var kind in AvailableComparisonKinds)
+                    {
+                        <option value="@kind">@kind</option>
+                    }
+                </select>
+            </div>
+            <div class="field">
+                <label for="comparison-first">Primeiro candidato</label>
+                <select id="comparison-first" class="form-select" @bind="_firstCandidateId" @bind:after="ChangeFirstCandidate">
+                    @foreach (var candidate in ComparableCandidates)
+                    {
+                        <option value="@candidate.CandidateId">@candidate.CandidateName (@candidate.CandidateKind)</option>
+                    }
+                </select>
+            </div>
+            <div class="field">
+                <label for="comparison-second">Segundo candidato</label>
+                <select id="comparison-second" class="form-select" @bind="_secondCandidateId" @bind:after="ClearComparison">
+                    @foreach (var candidate in ComparableCandidates.Where(candidate => candidate.CandidateId != _firstCandidateId))
+                    {
+                        <option value="@candidate.CandidateId">@candidate.CandidateName (@candidate.CandidateKind)</option>
+                    }
+                </select>
+            </div>
+        </div>
+        <button class="btn btn-outline-primary"
+                type="button"
+                disabled="@(_isBusy || string.IsNullOrEmpty(_firstCandidateId) || string.IsNullOrEmpty(_secondCandidateId))"
+                @onclick="CompareCandidatesAsync">
+            Comparar sem alterar decisões
+        </button>
+
+        @if (_comparison is not null)
+        {
+            <div class="comparison-result" aria-live="polite">
+                <p>
+                    Comparação da análise <code>@_comparison.AnalysisId</code> ·
+                    dependências: @_comparison.DependencyDataStatus
+                </p>
+                <div class="comparison-sides">
+                    @foreach (var side in new[] { _comparison.FirstCandidate, _comparison.SecondCandidate })
+                    {
+                        <article>
+                            <h4>@side.Name <small>v@side.Version</small></h4>
+                            <p>Tipo: @side.Kind · elegibilidade: @EligibilityLabel(side.Eligibility)</p>
+                            <p>Adequação individual: @ScoreLabel(side.FitScore)</p>
+                            <p>Cobertura individual: @(side.EvidenceCoverage?.ToString("P0", CultureInfo.CurrentCulture) ?? "Não avaliada")</p>
+                        </article>
+                    }
+                </div>
+                <h4>Relações entre candidatos</h4>
+                @if (_comparison.RelationsBetweenCandidates.Count == 0)
+                {
+                    <p>Não há achados de relação direta entre este par.</p>
+                }
+                else
+                {
+                    <ul>
+                        @foreach (var relation in _comparison.RelationsBetweenCandidates)
+                        {
+                            <li>@relation.Type: @relation.SourceId → @relation.TargetId · @relation.Status · @relation.Rationale</li>
+                        }
+                    </ul>
+                }
+                <h4>Dependências compartilhadas</h4>
+                <p>@FormatIds(_comparison.SharedRequiredDependencyIds)</p>
+                <h4>Dependências exclusivas</h4>
+                <p>Somente @(_comparison.FirstCandidate.Name): @FormatIds(_comparison.FirstOnlyRequiredDependencyIds)</p>
+                <p>Somente @(_comparison.SecondCandidate.Name): @FormatIds(_comparison.SecondOnlyRequiredDependencyIds)</p>
+                @if (_comparison.Limitations.Count > 0)
+                {
+                    <h4>Limitações</h4>
+                    <ul>
+                        @foreach (var limitation in _comparison.Limitations)
+                        {
+                            <li>@limitation</li>
+                        }
+                    </ul>
+                }
+            </div>
+        }
+
+        <div class="section-heading">
+            <div>
+                <p class="eyebrow">REGISTRO EXPLÍCITO</p>
+                <h3>Registrar ou revisar uma decisão</h3>
+            </div>
+        </div>
+        <EditForm Model="_draft" OnValidSubmit="RecordDecisionAsync">
+            <DataAnnotationsValidator />
+            <div class="form-row">
+                <div class="field">
+                    <label for="decision-analysis">Análise de referência</label>
+                    <InputSelect id="decision-analysis" class="form-select" @bind-Value="_draft.AnalysisId">
+                        @foreach (var item in Analyses)
+                        {
+                            <option value="@item.Snapshot.AnalysisId">
+                                @item.Snapshot.CreatedAt.ToLocalTime().ToString("g", CultureInfo.CurrentCulture)
+                                @(item.IsOutdated ? " (desatualizada)" : string.Empty)
+                            </option>
+                        }
+                    </InputSelect>
+                </div>
+                <div class="field">
+                    <label for="decision-revises">Revisar decisão existente (opcional)</label>
+                    <InputSelect id="decision-revises" class="form-select" @bind-Value="_draft.RevisesDecisionId">
+                        <option value="">Nova decisão</option>
+                        @foreach (var decision in RevisableDecisions)
+                        {
+                            <option value="@decision.Id">@decision.SelectedAlternativeId · @decision.Status · revisão @decision.Revision</option>
+                        }
+                    </InputSelect>
+                </div>
+            </div>
+            <div class="field">
+                <label for="decision-selected">Alternativa escolhida</label>
+                <InputSelect id="decision-selected" class="form-select" @bind-Value="_draft.SelectedAlternativeId">
+                    <option value="">Selecione uma alternativa</option>
+                    @foreach (var candidate in DecisionCandidates)
+                    {
+                        <option value="@candidate.CandidateId">@candidate.CandidateName (@candidate.CandidateKind)</option>
+                    }
+                </InputSelect>
+                <ValidationMessage For="() => _draft.SelectedAlternativeId" />
+            </div>
+            @if (SelectedCandidate is not null)
+            {
+                <fieldset class="field">
+                    <legend>Alternativas consideradas do mesmo tipo</legend>
+                    @foreach (var candidate in DecisionCandidates.Where(candidate =>
+                        candidate.CandidateKind == SelectedCandidate.CandidateKind &&
+                        candidate.CandidateId != SelectedCandidate.CandidateId))
+                    {
+                        <label class="form-check">
+                            <input class="form-check-input"
+                                   type="checkbox"
+                                   checked="@_draft.ConsideredAlternativeIds.Contains(candidate.CandidateId)"
+                                   @onchange="args => ToggleConsidered(candidate.CandidateId, args.Value)" />
+                            <span class="form-check-label">@candidate.CandidateName</span>
+                        </label>
+                    }
+                </fieldset>
+            }
+            <div class="field">
+                <label for="decision-justification">Justificativa</label>
+                <InputTextArea id="decision-justification" class="form-control" rows="3" @bind-Value="_draft.Justification" />
+                <ValidationMessage For="() => _draft.Justification" />
+            </div>
+            <div class="field">
+                <label for="decision-consequences">Consequências conhecidas (uma por linha; opcional)</label>
+                <InputTextArea id="decision-consequences" class="form-control" rows="2" @bind-Value="_draft.Consequences" />
+            </div>
+            <div class="field">
+                <label for="decision-author">Registrado por</label>
+                <InputText id="decision-author" class="form-control" @bind-Value="_draft.RecordedBy" />
+                <ValidationMessage For="() => _draft.RecordedBy" />
+            </div>
+            <button class="btn btn-primary" type="submit" disabled="@_isBusy">
+                @(_draft.RevisesDecisionId.HasValue ? "Registrar revisão como proposta" : "Registrar proposta")
+            </button>
+        </EditForm>
+    }
+
+    <div class="section-heading">
+        <div>
+            <p class="eyebrow">HISTÓRICO DO PROJETO</p>
+            <h3>Decisões registradas</h3>
+        </div>
+    </div>
+    @if (Project.Decisions.Count == 0)
+    {
+        <p class="empty-state">Nenhuma decisão foi registrada. Abrir ou comparar candidatos não cria uma decisão.</p>
+    }
+    else
+    {
+        <ul class="decision-list">
+            @foreach (var decision in Project.Decisions.OrderByDescending(decision => decision.RecordedAt))
+            {
+                <li class="decision-card" @key="decision.Id">
+                    <div class="panel-heading">
+                        <h4>@decision.SelectedAlternativeId <small>(@decision.SelectedAlternativeKind)</small></h4>
+                        <span class="decision-status">@DecisionLabel(decision.Status) · revisão @decision.Revision</span>
+                    </div>
+                    <p>@decision.Justification</p>
+                    <p class="project-link-meta">
+                        Por @decision.RecordedBy em @decision.RecordedAt.ToLocalTime().ToString("g", CultureInfo.CurrentCulture)
+                        @if (decision.AnalysisId.HasValue)
+                        {
+                            <span> · análise <code>@decision.AnalysisId</code></span>
+                        }
+                        @if (decision.SupersedesDecisionId.HasValue)
+                        {
+                            <span> · revisa <code>@decision.SupersedesDecisionId</code></span>
+                        }
+                        @if (decision.SupersededByDecisionId.HasValue)
+                        {
+                            <span> · substituída por <code>@decision.SupersededByDecisionId</code></span>
+                        }
+                    </p>
+                    @if (decision.Status == DecisionStatus.Proposed)
+                    {
+                        <div class="decision-actions">
+                            <button class="btn btn-sm btn-outline-success"
+                                    type="button"
+                                    disabled="@_isBusy"
+                                    @onclick="() => TransitionDecisionAsync(decision.Id, DecisionStatus.Accepted)">
+                                Aceitar decisão
+                            </button>
+                            <button class="btn btn-sm btn-outline-secondary"
+                                    type="button"
+                                    disabled="@_isBusy"
+                                    @onclick="() => TransitionDecisionAsync(decision.Id, DecisionStatus.Rejected)">
+                                Rejeitar decisão
+                            </button>
+                        </div>
+                    }
+                    else if (decision.Status == DecisionStatus.Accepted)
+                    {
+                        <p class="project-link-meta">Uma revisão cria nova proposta e mantém esta revisão como histórico.</p>
+                    }
+                </li>
+            }
+        </ul>
+    }
+</section>
+
+@code {
+    [Parameter, EditorRequired]
+    public ProjectView Project { get; set; } = null!;
+
+    [Parameter]
+    public IReadOnlyList<AnalysisHistoryItem> Analyses { get; set; } = Array.Empty<AnalysisHistoryItem>();
+
+    [Parameter]
+    public EventCallback<ProjectView> OnProjectChanged { get; set; }
+
+    private readonly List<string> _errors = [];
+    private readonly DecisionDraft _draft = new();
+    private Guid _comparisonAnalysisId;
+    private string? _comparisonKind;
+    private string? _firstCandidateId;
+    private string? _secondCandidateId;
+    private AnalysisCandidateComparison? _comparison;
+    private bool _isBusy;
+    private string? _notice;
+
+    private AnalysisHistoryItem? SelectedAnalysis =>
+        Analyses.FirstOrDefault(item => item.Snapshot.AnalysisId == _draft.AnalysisId);
+
+    private IReadOnlyList<AnalysisCandidateResult> DecisionCandidates =>
+        SelectedAnalysis?.Snapshot.CandidateGroups.SelectMany(group => group.Candidates).ToArray()
+        ?? Array.Empty<AnalysisCandidateResult>();
+
+    private AnalysisCandidateResult? SelectedCandidate =>
+        DecisionCandidates.FirstOrDefault(candidate => candidate.CandidateId == _draft.SelectedAlternativeId);
+
+    private IReadOnlyList<AnalysisCandidateResult> ComparableCandidates
+    {
+        get
+        {
+            var snapshot = Analyses.FirstOrDefault(item => item.Snapshot.AnalysisId == _comparisonAnalysisId)?.Snapshot;
+            return snapshot is null || _comparisonKind is null
+                ? Array.Empty<AnalysisCandidateResult>()
+                : snapshot!.CandidateGroups
+                    .SelectMany(group => group.Candidates)
+                    .Where(candidate => candidate.CandidateKind == _comparisonKind)
+                    .ToArray();
+        }
+    }
+
+    private IReadOnlyList<string> AvailableComparisonKinds =>
+        Analyses.FirstOrDefault(item => item.Snapshot.AnalysisId == _comparisonAnalysisId)?
+            .Snapshot.CandidateGroups.Select(group => group.Kind).Distinct(StringComparer.Ordinal).ToArray()
+        ?? Array.Empty<string>();
+
+    private IReadOnlyList<ArchitecturalDecisionView> RevisableDecisions =>
+        Project.Decisions
+            .Where(decision => decision.Status is DecisionStatus.Proposed or DecisionStatus.Accepted)
+            .ToArray();
+
+    protected override void OnParametersSet()
+    {
+        if (Analyses.Count == 0)
+        {
+            return;
+        }
+
+        if (_draft.AnalysisId is null || Analyses.All(item => item.Snapshot.AnalysisId != _draft.AnalysisId))
+        {
+            _draft.AnalysisId = Analyses[0].Snapshot.AnalysisId;
+            ResetDecisionDraft();
+        }
+
+        if (Analyses.All(item => item.Snapshot.AnalysisId != _comparisonAnalysisId))
+        {
+            _comparisonAnalysisId = Analyses[0].Snapshot.AnalysisId;
+            ResetComparisonKind();
+        }
+    }
+
+    private void ResetDecisionDraft()
+    {
+        _draft.SelectedAlternativeId = string.Empty;
+        _draft.ConsideredAlternativeIds.Clear();
+    }
+
+    private void ChangeComparisonAnalysis() => ResetComparisonKind();
+
+    private void ChangeComparisonKind()
+    {
+        ClearComparison();
+        _firstCandidateId = ComparableCandidates.FirstOrDefault()?.CandidateId;
+        _secondCandidateId = ComparableCandidates
+            .FirstOrDefault(candidate => candidate.CandidateId != _firstCandidateId)?.CandidateId;
+    }
+
+    private void ResetComparisonKind()
+    {
+        _comparisonKind = AvailableComparisonKinds.FirstOrDefault();
+        ChangeComparisonKind();
+    }
+
+    private void ChangeFirstCandidate()
+    {
+        ClearComparison();
+        if (_secondCandidateId == _firstCandidateId)
+        {
+            _secondCandidateId = ComparableCandidates
+                .FirstOrDefault(candidate => candidate.CandidateId != _firstCandidateId)?.CandidateId;
+        }
+    }
+
+    private void ClearComparison()
+    {
+        _comparison = null;
+    }
+
+    private async Task CompareCandidatesAsync()
+    {
+        _isBusy = true;
+        _errors.Clear();
+        try
+        {
+            var result = await Sender.Send(new CompareAnalysisCandidatesQuery(
+                Project.Id,
+                _comparisonAnalysisId,
+                _firstCandidateId!,
+                _secondCandidateId!));
+            if (result.TryGetValue(out var comparison))
+            {
+                _comparison = comparison;
+            }
+            else
+            {
+                _errors.AddRange(result.Errors.Select(error => error.Message));
+            }
+        }
+        finally
+        {
+            _isBusy = false;
+        }
+    }
+
+    private async Task RecordDecisionAsync()
+    {
+        _isBusy = true;
+        _errors.Clear();
+        _notice = null;
+        try
+        {
+            var result = await Sender.Send(new RecordArchitecturalDecisionCommand(
+                Project.Id,
+                _draft.SelectedAlternativeId,
+                SelectedCandidate?.CandidateKind ?? string.Empty,
+                _draft.ConsideredAlternativeIds.ToArray(),
+                _draft.Justification,
+                _draft.Consequences.Split(
+                    ['\r', '\n'],
+                    StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries),
+                _draft.RecordedBy,
+                _draft.AnalysisId,
+                _draft.RevisesDecisionId));
+            if (result.TryGetValue(out var project))
+            {
+                _notice = _draft.RevisesDecisionId.HasValue
+                    ? "Revisão registrada como nova proposta; a anterior permanece no histórico."
+                    : "Proposta de decisão registrada.";
+                _draft.RevisesDecisionId = null;
+                await OnProjectChanged.InvokeAsync(project);
+            }
+            else
+            {
+                _errors.AddRange(result.Errors.Select(error => error.Message));
+            }
+        }
+        finally
+        {
+            _isBusy = false;
+        }
+    }
+
+    private async Task TransitionDecisionAsync(Guid decisionId, DecisionStatus status)
+    {
+        _isBusy = true;
+        _errors.Clear();
+        _notice = null;
+        try
+        {
+            var result = await Sender.Send(new TransitionArchitecturalDecisionCommand(
+                Project.Id,
+                decisionId,
+                status,
+                _draft.RecordedBy));
+            if (result.TryGetValue(out var project))
+            {
+                _notice = status == DecisionStatus.Accepted
+                    ? "Decisão aceita explicitamente."
+                    : "Decisão rejeitada explicitamente.";
+                await OnProjectChanged.InvokeAsync(project);
+            }
+            else
+            {
+                _errors.AddRange(result.Errors.Select(error => error.Message));
+            }
+        }
+        finally
+        {
+            _isBusy = false;
+        }
+    }
+
+    private void ToggleConsidered(string candidateId, object? value)
+    {
+        if (value is true)
+        {
+            _draft.ConsideredAlternativeIds.Add(candidateId);
+        }
+        else
+        {
+            _draft.ConsideredAlternativeIds.Remove(candidateId);
+        }
+    }
+
+    private static string FormatIds(IReadOnlyList<string> ids) =>
+        ids.Count == 0 ? "Nenhuma dependência identificada." : string.Join(", ", ids);
+
+    private static string ScoreLabel(decimal? score) =>
+        score.HasValue ? $"{score.Value.ToString("0.##", CultureInfo.InvariantCulture)} / 100" : "Não avaliada";
+
+    private static string EligibilityLabel(AnalysisEligibility eligibility) =>
+        eligibility switch
+        {
+            AnalysisEligibility.Eligible => "Elegível",
+            AnalysisEligibility.Excluded => "Excluído",
+            _ => "Não avaliado"
+        };
+
+    private static string DecisionLabel(DecisionStatus status) =>
+        status switch
+        {
+            DecisionStatus.Proposed => "Proposta",
+            DecisionStatus.Accepted => "Aceita",
+            DecisionStatus.Rejected => "Rejeitada",
+            DecisionStatus.Superseded => "Substituída",
+            _ => status.ToString()
+        };
+
+    private sealed class DecisionDraft
+    {
+        [Required(ErrorMessage = "Selecione uma alternativa.")]
+        public string SelectedAlternativeId { get; set; } = string.Empty;
+
+        [StringLength(4000, MinimumLength = 1, ErrorMessage = "Informe uma justificativa de até 4000 caracteres.")]
+        public string Justification { get; set; } = string.Empty;
+
+        [StringLength(20000, ErrorMessage = "As consequências excedem o limite.")]
+        public string Consequences { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Informe quem está registrando a decisão.")]
+        [StringLength(120, ErrorMessage = "Use até 120 caracteres.")]
+        public string RecordedBy { get; set; } = string.Empty;
+
+        public Guid? AnalysisId { get; set; }
+
+        public Guid? RevisesDecisionId { get; set; }
+
+        public HashSet<string> ConsideredAlternativeIds { get; } = new(StringComparer.Ordinal);
+    }
+}

@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "C4 diagram layout overrides",
+  "description": "Presentation-only layout persisted separately from the semantic diagram snapshot.",
+  "type": "object",
+  "required": [
+    "schemaVersion",
+    "diagramId",
+    "sourceFingerprint",
+    "positions",
+    "collapsedBoundaryIds"
+  ],
+  "properties": {
+    "schemaVersion": { "const": "1.0" },
+    "diagramId": { "type": "string", "minLength": 1 },
+    "sourceFingerprint": {
+      "type": "string",
+      "pattern": "^sha256:[a-f0-9]{64}$"
+    },
+    "positions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["elementId", "x", "y"],
+        "properties": {
+          "elementId": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]*$"
+          },
+          "x": { "type": "number" },
+          "y": { "type": "number" }
+        },
+        "additionalProperties": false
+      }
+    },
+    "collapsedBoundaryIds": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]*$"
+      }
+    }
+  },
+  "additionalProperties": false
+}

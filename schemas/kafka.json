@@ -1,0 +1,33 @@
+{
+  "id": "kafka",
+  "kind": "Technology",
+  "schemaVersion": "1.0",
+  "version": "1.0.0",
+  "name": "Apache Kafka",
+  "description": "Plataforma distribuída de eventos baseada em logs particionados e retidos, com consumidores que controlam sua posição de leitura.",
+  "category": "Event Streaming",
+  "tags": ["event-streaming", "messaging", "distributed-log"],
+  "capabilities": [
+    "Publicação e consumo de eventos em tópicos particionados.",
+    "Retenção configurável e leitura/replay dentro dos limites de retenção.",
+    "Escala de processamento por partições e grupos de consumidores."
+  ],
+  "useWhen": [
+    "Há requisitos de fluxo contínuo de eventos, retenção ou replay.",
+    "O domínio e a operação justificam uma plataforma distribuída de streaming."
+  ],
+  "avoidWhen": [
+    "O caso de uso é apenas uma fila simples e a complexidade de streaming não se justifica.",
+    "A equipe não consegue operar ou contratar uma oferta gerenciada compatível."
+  ],
+  "benefits": [
+    "Consumidores podem processar eventos de forma independente dentro do período de retenção.",
+    "O modelo de log pode suportar múltiplos consumidores e reprocessamento."
+  ],
+  "risks": [
+    "Particionamento, ordenação, retenção e evolução de contratos precisam ser projetados.",
+    "Operação e monitoramento podem ser complexos, conforme a distribuição adotada."
+  ],
+  "complexity": 8,
+  "operationalCost": 8
+}

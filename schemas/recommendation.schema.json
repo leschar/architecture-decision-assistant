@@ -1,0 +1,168 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Recommendation result",
+  "description": "Generated, explainable candidate result belonging to an analysis, not a catalog knowledge item.",
+  "type": "object",
+  "required": [
+    "schemaVersion",
+    "analysisId",
+    "candidateId",
+    "candidateKind",
+    "candidateName",
+    "candidateVersion",
+    "candidateDescription",
+    "eligibility",
+    "fitScore",
+    "evidenceCoverage",
+    "ruleEvaluations",
+    "relationFindings",
+    "warnings"
+  ],
+  "properties": {
+    "schemaVersion": { "const": "1.0" },
+    "analysisId": { "type": "string", "minLength": 1 },
+    "candidateId": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+    "candidateKind": { "type": "string", "enum": ["Architecture", "Pattern", "Technology"] },
+    "candidateName": { "type": "string", "minLength": 1 },
+    "candidateVersion": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$" },
+    "candidateDescription": { "type": "string", "minLength": 1 },
+    "candidateSource": {
+      "oneOf": [
+        { "type": "string", "minLength": 1 },
+        { "type": "null" }
+      ]
+    },
+    "eligibility": { "type": "string", "enum": ["Eligible", "Excluded", "NotEvaluated"] },
+    "fitScore": {
+      "oneOf": [
+        { "type": "number", "minimum": 0, "maximum": 100 },
+        { "type": "null" }
+      ]
+    },
+    "benefits": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "limitations": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "evidenceCoverage": {
+      "oneOf": [
+        { "type": "number", "minimum": 0, "maximum": 1 },
+        { "type": "null" }
+      ]
+    },
+    "ruleEvaluations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "ruleId",
+          "ruleVersion",
+          "ruleContentHash",
+          "ruleName",
+          "knowledgeSource",
+          "applicability",
+          "conditionResult",
+          "effects",
+          "unknownFacts",
+          "factEvidence"
+        ],
+        "properties": {
+          "ruleId": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+          "ruleVersion": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$" },
+          "ruleContentHash": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+          "ruleName": { "type": "string", "minLength": 1 },
+          "source": {
+            "oneOf": [
+              { "type": "string", "minLength": 1 },
+              { "type": "null" }
+            ]
+          },
+          "knowledgeSource": { "type": "string", "minLength": 1 },
+          "applicability": { "type": "string", "enum": ["Applicable", "NotApplicable", "Unknown"] },
+          "conditionResult": { "type": "string", "enum": ["Matched", "NotMatched", "Unknown", "NotEvaluated"] },
+          "effects": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["type", "weight", "rationale"],
+              "properties": {
+                "type": { "type": "string", "enum": ["Score", "Exclude", "Flag"] },
+                "dimension": { "type": "string", "enum": ["fit"] },
+                "points": { "type": "integer", "minimum": -100, "maximum": 100 },
+                "weight": { "type": "integer", "minimum": 1, "maximum": 100 },
+                "severity": { "type": "string", "enum": ["Info", "Warning", "Risk"] },
+                "rationale": { "type": "string", "minLength": 1 }
+              },
+              "additionalProperties": false
+            }
+          },
+          "unknownFacts": {
+            "type": "array",
+            "items": { "type": "string", "minLength": 1 }
+          },
+          "factEvidence": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["fact", "status"],
+              "properties": {
+                "fact": { "type": "string", "minLength": 1 },
+                "operator": { "type": "string", "minLength": 1 },
+                "expectedInteger": { "type": "integer" },
+                "value": { "type": "string" },
+                "status": { "type": "string", "enum": ["Confirmed", "Unknown"] }
+              },
+              "additionalProperties": false
+            }
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "relationFindings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["type", "sourceId", "targetId", "status", "rationale"],
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": ["DependsOn", "Recommends", "ConflictsWith", "AlternativeTo"]
+          },
+          "sourceId": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+          "targetId": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+          "status": {
+            "type": "string",
+            "enum": [
+              "Satisfied", "Missing", "Suggested", "Relevant", "Conflict", "Alternative",
+              "Unknown", "NotEvaluated"
+            ]
+          },
+          "rationale": { "type": "string", "minLength": 1 },
+          "applicability": {
+            "type": "string",
+            "enum": ["Applicable", "NotApplicable", "Unknown", "NotEvaluated"]
+          },
+          "unknownFacts": {
+            "type": "array",
+            "items": { "type": "string", "minLength": 1 }
+          },
+          "relationSource": { "type": "string", "minLength": 1 },
+          "relationKey": { "type": "string", "minLength": 1 },
+          "sourceVersion": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$" },
+          "targetVersion": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$" },
+          "knowledgeSource": { "type": "string", "minLength": 1 }
+        },
+        "additionalProperties": false
+      }
+    },
+    "warnings": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    }
+  },
+  "additionalProperties": false
+}

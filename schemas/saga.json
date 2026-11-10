@@ -1,0 +1,37 @@
+{
+  "id": "saga",
+  "kind": "Pattern",
+  "schemaVersion": "1.0",
+  "version": "1.0.0",
+  "name": "Saga",
+  "description": "Pattern para coordenar uma transação de negócio distribuída por meio de transações locais e ações compensatórias.",
+  "category": "Distributed Transactions",
+  "problem": "Uma operação de negócio atravessa serviços ou limites transacionais que não compartilham uma única transação atômica.",
+  "solution": "Dividir a operação em transações locais coordenadas e definir ações compensatórias para falhas que exijam desfazer efeitos anteriores.",
+  "benefits": [
+    "Evita depender de uma transação distribuída global.",
+    "Torna explícitos os passos e a recuperação do processo de negócio."
+  ],
+  "risks": [
+    "Exige lidar com consistência eventual e estados intermediários.",
+    "Compensações não são necessariamente reversões exatas.",
+    "A investigação de falhas pode ser complexa."
+  ],
+  "complexity": 8,
+  "useWhen": [
+    "Uma transação de negócio cruza limites de serviço e pode ser modelada como passos locais.",
+    "A consistência eventual e as compensações são aceitáveis para o domínio."
+  ],
+  "avoidWhen": [
+    "A operação cabe em um único limite transacional local.",
+    "O negócio exige atomicidade imediata que não pode ser expressa por compensações."
+  ],
+  "relations": [
+    {
+      "type": "Recommends",
+      "targetId": "outbox",
+      "rationale": "O Outbox pode ajudar a publicar mensagens de forma confiável quando passos da Saga comunicam mudanças por eventos.",
+      "conditions": ["A implementação publica eventos junto a alterações persistidas."]
+    }
+  ]
+}

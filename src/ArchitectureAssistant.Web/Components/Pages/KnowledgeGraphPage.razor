@@ -1,0 +1,249 @@
+@page "/knowledge-graph"
+@rendermode InteractiveServer
+@using ArchitectureAssistant.Application.Knowledge
+@using ArchitectureAssistant.Domain.KnowledgeGraph
+@using MediatR
+@inject ISender Sender
+
+<PageTitle>Grafo de conhecimento | Architecture Decision Assistant</PageTitle>
+
+<header class="workspace-header">
+    <p class="eyebrow">CONHECIMENTO · EXPLORAÇÃO</p>
+    <h1>Grafo de conhecimento</h1>
+    <p class="lead">
+        Explore relações declaradas no catálogo. Navegar não seleciona itens,
+        altera scores nem registra decisões.
+    </p>
+</header>
+
+@if (_isLoading)
+{
+    <p role="status">Carregando e validando o grafo…</p>
+}
+else if (_errors.Count > 0)
+{
+    <div class="alert alert-danger" role="alert">
+        <strong>O grafo não foi carregado.</strong>
+        <ul class="mb-0">
+            @foreach (var error in _errors)
+            {
+                <li>@error</li>
+            }
+        </ul>
+    </div>
+}
+else if (_graph is not null)
+{
+    <section class="panel graph-explorer" aria-labelledby="graph-heading">
+        <div class="panel-heading">
+            <div>
+                <p class="eyebrow">PROJEÇÃO DETERMINÍSTICA</p>
+                <h2 id="graph-heading">Exploração do catálogo</h2>
+            </div>
+            <span class="count-badge">@_graph.Nodes.Count nós</span>
+        </div>
+        <p class="catalog-meta">
+            Schema @_graph.SchemaVersion · catálogo <code>@_graph.CatalogHash</code> ·
+            @_graph.Relations.Count relações canônicas
+        </p>
+
+        @if (_graph.Warnings.Count > 0)
+        {
+            <div class="alert alert-warning" role="note">
+                <strong>Avisos da projeção</strong>
+                <ul class="mb-0">
+                    @foreach (var warning in _graph.Warnings)
+                    {
+                        <li>@warning</li>
+                    }
+                </ul>
+            </div>
+        }
+
+        <div class="graph-browser-grid">
+            <section aria-labelledby="graph-nodes-heading">
+                <h3 id="graph-nodes-heading">Nós</h3>
+                <div class="field">
+                    <label for="graph-search">Buscar por nome ou ID</label>
+                    <input id="graph-search"
+                           class="form-control"
+                           type="search"
+                           @bind="_search"
+                           @bind:event="oninput" />
+                </div>
+                <div class="field">
+                    <label for="graph-kind">Tipo</label>
+                    <select id="graph-kind" class="form-select" @bind="_selectedKind">
+                        <option value="">Todos</option>
+                        <option value="Architecture">Arquiteturas</option>
+                        <option value="Pattern">Patterns</option>
+                        <option value="Technology">Tecnologias</option>
+                    </select>
+                </div>
+                @if (VisibleNodes.Count == 0)
+                {
+                    <p class="empty-state">Nenhum nó corresponde aos filtros.</p>
+                }
+                else
+                {
+                    <ul class="graph-node-list" aria-label="Nós do grafo">
+                        @foreach (var node in VisibleNodes)
+                        {
+                            <li @key="node.ItemId">
+                                <button type="button"
+                                        class="graph-node-button @(_selectedNodeId == node.ItemId ? "active" : string.Empty)"
+                                        aria-pressed="@(_selectedNodeId == node.ItemId)"
+                                        @onclick="() => SelectNode(node.ItemId)">
+                                    <span class="graph-node-name">@node.Name</span>
+                                    <span class="knowledge-item-kind">@KindLabel(node.Kind)</span>
+                                    <span class="graph-node-id"><code>@node.ItemId</code> · v@node.Version</span>
+                                </button>
+                            </li>
+                        }
+                    </ul>
+                }
+            </section>
+
+            <section aria-labelledby="graph-relations-heading">
+                @if (SelectedNode is null)
+                {
+                    <h3 id="graph-relations-heading">Relações</h3>
+                    <p class="empty-state">O catálogo não contém nós de Arquitetura, Pattern ou Technology.</p>
+                }
+                else
+                {
+                    <p class="eyebrow">NÓ SELECIONADO · @KindLabel(SelectedNode.Kind)</p>
+                    <h3 id="graph-relations-heading">@SelectedNode.Name</h3>
+                    <p class="project-link-meta">
+                        <code>@SelectedNode.ItemId</code> · versão @SelectedNode.Version ·
+                        fonte @SelectedNode.KnowledgeSource
+                    </p>
+
+                    @if (SelectedRelations.Count == 0)
+                    {
+                        <p class="empty-state">Este nó não possui relações declaradas.</p>
+                    }
+                    else
+                    {
+                        <ul class="graph-relation-list" aria-label="Relações do nó selecionado">
+                            @foreach (var relation in SelectedRelations)
+                            {
+                                var otherNode = GetOtherNode(relation);
+                                <li class="graph-relation-card" @key="relation.RelationKey">
+                                    <p class="graph-relation-path">
+                                        <strong>@GetNodeName(relation.SourceId)</strong>
+                                        <span class="graph-relation-type">@RelationLabel(relation.Type)</span>
+                                        <strong>@GetNodeName(relation.TargetId)</strong>
+                                    </p>
+                                    <button type="button"
+                                            class="graph-related-node"
+                                            aria-label="Explorar @otherNode.Name"
+                                            @onclick="() => SelectNode(otherNode.ItemId)">
+                                        Explorar @otherNode.Name
+                                        <span class="knowledge-item-kind">@KindLabel(otherNode.Kind)</span>
+                                    </button>
+                                    @foreach (var declaration in relation.Declarations)
+                                    {
+                                        <div class="graph-relation-evidence">
+                                            <p>@declaration.Rationale</p>
+                                            <p class="project-link-meta">
+                                                <code>@declaration.RelationKey</code> ·
+                                                fonte @declaration.KnowledgeSource
+                                                @if (!string.IsNullOrWhiteSpace(declaration.Source))
+                                                {
+                                                    <span> · @declaration.Source</span>
+                                                }
+                                            </p>
+                                        </div>
+                                    }
+                                    @if (relation.ConditionKey != "always")
+                                    {
+                                        <p class="graph-condition-note">
+                                            Relação com condição contextual declarada; ela não é avaliada nesta navegação.
+                                        </p>
+                                    }
+                                </li>
+                            }
+                        </ul>
+                    }
+                }
+            </section>
+        </div>
+    </section>
+}
+
+@code {
+    private readonly List<string> _errors = [];
+    private KnowledgeGraphProjection? _graph;
+    private bool _isLoading = true;
+    private string _search = string.Empty;
+    private string _selectedKind = string.Empty;
+    private string? _selectedNodeId;
+
+    private IReadOnlyList<KnowledgeGraphNode> VisibleNodes =>
+        _graph?.Nodes
+            .Where(node => string.IsNullOrEmpty(_selectedKind) || node.Kind == _selectedKind)
+            .Where(MatchesSearch)
+            .ToArray()
+        ?? Array.Empty<KnowledgeGraphNode>();
+
+    private KnowledgeGraphNode? SelectedNode =>
+        _graph?.Nodes.FirstOrDefault(node => node.ItemId == _selectedNodeId);
+
+    private IReadOnlyList<KnowledgeGraphRelation> SelectedRelations =>
+        _graph?.Relations
+            .Where(relation => relation.SourceId == _selectedNodeId || relation.TargetId == _selectedNodeId)
+            .ToArray()
+        ?? Array.Empty<KnowledgeGraphRelation>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var result = await Sender.Send(new GetKnowledgeGraphQuery());
+        if (result.TryGetValue(out var graph))
+        {
+            _graph = graph;
+            _selectedNodeId = graph.Nodes.FirstOrDefault()?.ItemId;
+        }
+        else
+        {
+            _errors.AddRange(result.Errors.Select(error => error.Message));
+        }
+
+        _isLoading = false;
+    }
+
+    private bool MatchesSearch(KnowledgeGraphNode node) =>
+        string.IsNullOrWhiteSpace(_search)
+        || node.Name.Contains(_search, StringComparison.CurrentCultureIgnoreCase)
+        || node.ItemId.Contains(_search, StringComparison.CurrentCultureIgnoreCase);
+
+    private void SelectNode(string itemId) => _selectedNodeId = itemId;
+
+    private KnowledgeGraphNode GetOtherNode(KnowledgeGraphRelation relation)
+    {
+        var itemId = relation.SourceId == _selectedNodeId ? relation.TargetId : relation.SourceId;
+        return _graph!.Nodes.Single(node => node.ItemId == itemId);
+    }
+
+    private string GetNodeName(string itemId) =>
+        _graph!.Nodes.Single(node => node.ItemId == itemId).Name;
+
+    private static string KindLabel(string kind) =>
+        kind switch
+        {
+            "Architecture" => "Arquitetura",
+            "Pattern" => "Pattern",
+            "Technology" => "Tecnologia",
+            _ => kind
+        };
+
+    private static string RelationLabel(string type) =>
+        type switch
+        {
+            "DependsOn" => "depende de →",
+            "Recommends" => "recomenda →",
+            "ConflictsWith" => "conflita com",
+            "AlternativeTo" => "é alternativa a",
+            _ => type
+        };
+}

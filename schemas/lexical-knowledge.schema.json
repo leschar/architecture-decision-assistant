@@ -1,0 +1,193 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Deterministic lexical knowledge",
+  "description": "Versioned, declarative Portuguese vocabulary used to propose requirement tags. JSON content never contains executable logic.",
+  "type": "object",
+  "required": [
+    "schemaVersion",
+    "vocabularyId",
+    "version",
+    "locale",
+    "normalization",
+    "taxonomy",
+    "entries",
+    "negation",
+    "conflicts"
+  ],
+  "properties": {
+    "schemaVersion": { "const": "1.0" },
+    "vocabularyId": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+    },
+    "version": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$" },
+    "locale": { "type": "string", "minLength": 2 },
+    "normalization": {
+      "type": "object",
+      "required": [
+        "policyVersion",
+        "unicodeForm",
+        "caseFolding",
+        "diacriticFolding",
+        "tokenization",
+        "stemming",
+        "offsetUnit"
+      ],
+      "properties": {
+        "policyVersion": {
+          "type": "string",
+          "pattern": "^\\d+\\.\\d+\\.\\d+$"
+        },
+        "unicodeForm": { "const": "NFC" },
+        "caseFolding": { "const": "InvariantLowercase" },
+        "diacriticFolding": { "const": "RemoveMarksForMatchingOnly" },
+        "tokenization": { "const": "UnicodeWordBoundaries" },
+        "stemming": { "const": "Disabled" },
+        "offsetUnit": { "const": "Utf16CodeUnits" }
+      },
+      "additionalProperties": false
+    },
+    "taxonomy": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/tag" }
+    },
+    "entries": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/entry" }
+    },
+    "negation": {
+      "type": "object",
+      "required": ["cues", "clauseBoundaries", "exceptions"],
+      "properties": {
+        "cues": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "uniqueItems": true
+        },
+        "clauseBoundaries": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "uniqueItems": true
+        },
+        "exceptions": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "uniqueItems": true
+        },
+        "maxTokenDistance": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Upper bound for supported local negation patterns; not a general syntactic scope parser."
+        }
+      },
+      "additionalProperties": false
+    },
+    "conflicts": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/conflict" }
+    },
+    "source": { "type": "string", "minLength": 1 },
+    "updatedAt": { "type": "string", "format": "date-time" }
+  },
+  "$defs": {
+    "tag": {
+      "type": "object",
+      "required": ["id", "label", "description"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+(?:[.-][a-z0-9]+)*$"
+        },
+        "label": { "type": "string", "minLength": 1 },
+        "description": { "type": "string", "minLength": 1 },
+        "parentId": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+(?:[.-][a-z0-9]+)*$"
+        }
+      },
+      "additionalProperties": false
+    },
+    "form": {
+      "type": "object",
+      "required": ["text", "kind"],
+      "properties": {
+        "text": { "type": "string", "minLength": 1 },
+        "kind": {
+          "type": "string",
+          "enum": ["Canonical", "Synonym", "Abbreviation", "SpellingVariant"]
+        }
+      },
+      "additionalProperties": false
+    },
+    "entry": {
+      "type": "object",
+      "required": [
+        "id",
+        "canonicalForm",
+        "forms",
+        "tagIds",
+        "matchMode"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "canonicalForm": { "type": "string", "minLength": 1 },
+        "forms": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/form" }
+        },
+        "tagIds": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z0-9]+(?:[.-][a-z0-9]+)*$"
+          }
+        },
+        "matchMode": { "const": "ExactTokenSequence" },
+        "ambiguityGroup": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "clarificationQuestion": { "type": "string", "minLength": 1 },
+        "editorialPriority": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 3,
+          "description": "Optional editorial review/display priority; not a probability, confidence, or automatic disambiguation score."
+        },
+        "source": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": false
+    },
+    "conflict": {
+      "type": "object",
+      "required": ["id", "tagIds", "rationale", "clarificationQuestion"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "tagIds": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z0-9]+(?:[.-][a-z0-9]+)*$"
+          }
+        },
+        "rationale": { "type": "string", "minLength": 1 },
+        "clarificationQuestion": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

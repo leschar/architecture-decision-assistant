@@ -1,0 +1,416 @@
+@using ArchitectureAssistant.Application.Adrs
+@using ArchitectureAssistant.Application.Projects
+@using ArchitectureAssistant.Domain.Adrs
+@using MediatR
+@inject ISender Sender
+@inject IJSRuntime JS
+
+<section class="panel" aria-labelledby="adr-heading">
+    <div class="panel-heading">
+        <div>
+            <p class="eyebrow">FASE 4 · ADR</p>
+            <h2 id="adr-heading">Registros de decisão</h2>
+        </div>
+    </div>
+    <p>O ADR é preparado a partir de uma decisão humana. Aceitar o documento não altera a decisão.</p>
+
+    @if (_errors.Count > 0)
+    {
+        <div class="alert alert-danger" role="alert">
+            <ul class="mb-0">
+                @foreach (var error in _errors)
+                {
+                    <li>@error</li>
+                }
+            </ul>
+        </div>
+    }
+
+    <div class="form-row">
+        <div class="field">
+            <label for="adr-source-decision">Decisão de origem</label>
+            <InputSelect id="adr-source-decision" class="form-select" @bind-Value="_selectedDecisionId">
+                <option value="">Selecione</option>
+                @foreach (var decision in Project.Decisions)
+                {
+                    <option value="@decision.Id">@decision.SelectedAlternativeId · @decision.Status · rev. @decision.Revision</option>
+                }
+            </InputSelect>
+        </div>
+        <button class="btn btn-primary" type="button"
+                disabled="@(_isBusy || !_selectedDecisionId.HasValue || _adrs.Any(adr => adr.DecisionId == _selectedDecisionId.Value))"
+                @onclick="CreateDraftAsync">
+            Preparar rascunho ADR
+        </button>
+    </div>
+    @if (_selectedDecisionId.HasValue && _adrs.Any(adr => adr.DecisionId == _selectedDecisionId.Value))
+    {
+        <p>Esta decisão já tem um ADR; selecione-o para continuar a revisão editorial.</p>
+    }
+
+    @if (_adrs.Count > 0)
+    {
+        <div class="form-row">
+            <div class="field">
+                <label for="adr-select">ADR salvo</label>
+                <InputSelect id="adr-select" class="form-select" @bind-Value="_selectedAdrId" @bind:after="SelectAdr">
+                    @foreach (var adr in _adrs)
+                    {
+                        <option value="@adr.AdrId">@adr.Title · @adr.Status · rev. @adr.Revision</option>
+                    }
+                </InputSelect>
+            </div>
+            <button class="btn btn-outline-primary" type="button" disabled="@(_isBusy || _selectedAdr is null)" @onclick="ExportMarkdownAsync">
+                Exportar Markdown
+            </button>
+        </div>
+    }
+    else
+    {
+        <p>Nenhum ADR preparado para este projeto.</p>
+    }
+
+    @if (_selectedAdr is not null)
+    {
+        <article class="adr-editor">
+            <h3>@_selectedAdr.Title</h3>
+            <p>
+                @_selectedAdr.Status · ADR @_selectedAdr.AdrId · revisão @_selectedAdr.Revision ·
+                decisão @_selectedAdr.DecisionId (@_selectedAdr.SourceSnapshot.DecisionRevision)
+            </p>
+            @if (_selectedAdr.SupersededByAdrId is not null)
+            {
+                <p>Substituído pelo ADR @_selectedAdr.SupersededByAdrId.</p>
+            }
+            <h4>Alternativas registradas</h4>
+            @if (_selectedAdr.Sections.Alternatives.Items.Count == 0)
+            {
+                <p>NotProvided — nenhuma alternativa foi registrada.</p>
+            }
+            else
+            {
+                <ul>
+                    @foreach (var alternative in _selectedAdr.Sections.Alternatives.Items)
+                    {
+                        <li>@alternative.Name <code>@alternative.AlternativeId</code></li>
+                    }
+                </ul>
+            }
+
+            <div class="form-row">
+                <div class="field">
+                    <label for="adr-section">Seção para revisar</label>
+                    <InputSelect id="adr-section" class="form-select" @bind-Value="_sectionKind" @bind:after="SelectAdr">
+                        @foreach (var section in Enum.GetValues<AdrSectionKind>())
+                        {
+                            <option value="@section">@section</option>
+                        }
+                    </InputSelect>
+                </div>
+                <div class="field">
+                    <label for="adr-author">Autor da revisão</label>
+                    <InputText id="adr-author" class="form-control" @bind-Value="_author" />
+                </div>
+            </div>
+            <div class="field">
+                <label for="adr-content">Conteúdo</label>
+                <InputTextArea id="adr-content" class="form-control" rows="5" @bind-Value="_sectionContent" />
+            </div>
+            <p>Completude: @_currentSection.Completeness · autoria: @_currentSection.Authorship</p>
+            @if (_currentSection.SourceReferences.Count > 0)
+            {
+                <p>Fontes: @string.Join(", ", _currentSection.SourceReferences.Select(source => $"{source.SourceType}:{source.SourceId}@{source.SourceVersion}"))</p>
+            }
+            <button class="btn btn-outline-primary" type="button" disabled="@(_isBusy || _selectedAdr.Status is AdrStatus.Accepted or AdrStatus.Superseded)" @onclick="ReviseSectionAsync">
+                Salvar nova revisão
+            </button>
+
+            @if (_selectedAdr.Status is AdrStatus.Draft or AdrStatus.NeedsReview)
+            {
+                <div class="form-row">
+                    <div class="field">
+                        <label for="adr-reviewer">Revisor</label>
+                        <InputText id="adr-reviewer" class="form-control" @bind-Value="_reviewer" />
+                    </div>
+                    <div class="field">
+                        <label for="adr-review-note">Nota de revisão (opcional)</label>
+                        <InputText id="adr-review-note" class="form-control" @bind-Value="_reviewNote" />
+                    </div>
+                </div>
+                <button class="btn btn-outline-primary" type="button" disabled="@_isBusy" @onclick="AcceptAdrAsync">
+                    Aceitar ADR (sem alterar decisão)
+                </button>
+            }
+
+                @if (_selectedAdr.Status != AdrStatus.Superseded)
+                {
+                    var sourceDecision = Project.Decisions
+                        .SingleOrDefault(decision => decision.Id == _selectedAdr.DecisionId);
+                    var replacements = _adrs
+                        .Where(adr =>
+                            adr.AdrId != _selectedAdr.AdrId &&
+                            adr.Status != AdrStatus.Superseded &&
+                            sourceDecision?.SupersededByDecisionId == adr.DecisionId &&
+                            Project.Decisions.Any(decision =>
+                                decision.Id == adr.DecisionId &&
+                                decision.SupersedesDecisionId == sourceDecision?.Id))
+                        .ToArray();
+                    @if (replacements.Length > 0)
+                    {
+                        <div class="form-row">
+                            <div class="field">
+                                <label for="adr-replacement">ADR substituto</label>
+                                <InputSelect id="adr-replacement" class="form-select" @bind-Value="_replacementAdrId">
+                                    <option value="">Selecione</option>
+                                    @foreach (var replacement in replacements)
+                                    {
+                                        <option value="@replacement.AdrId">@replacement.Title · @replacement.Status · rev. @replacement.Revision</option>
+                                    }
+                                </InputSelect>
+                            </div>
+                        </div>
+                        <div class="field">
+                            <InputCheckbox id="adr-supersede-confirmation" @bind-Value="_supersedeConfirmed" />
+                            <label for="adr-supersede-confirmation">Confirmo que esta decisão foi substituída e que o novo ADR a documenta.</label>
+                        </div>
+                        <button class="btn btn-outline-danger" type="button"
+                                disabled="@(_isBusy || !_supersedeConfirmed || string.IsNullOrWhiteSpace(_replacementAdrId))"
+                                @onclick="SupersedeAdrAsync">
+                            Marcar como substituído
+                        </button>
+                    }
+                }
+
+                @if (!string.IsNullOrWhiteSpace(_markdown))
+            {
+                <div class="field">
+                    <label for="adr-markdown">Markdown do snapshot salvo</label>
+                    <textarea id="adr-markdown" class="form-control" rows="14" readonly value="@_markdown"></textarea>
+                </div>
+            }
+        </article>
+    }
+</section>
+
+@code {
+    private readonly List<string> _errors = [];
+    private IReadOnlyList<AdrSnapshot> _adrs = Array.Empty<AdrSnapshot>();
+    private AdrSnapshot? _selectedAdr;
+    private Guid? _selectedDecisionId;
+    private string? _selectedAdrId;
+    private AdrSectionKind _sectionKind = AdrSectionKind.Context;
+    private string _sectionContent = string.Empty;
+    private string _author = string.Empty;
+    private string _reviewer = string.Empty;
+    private string? _reviewNote;
+    private string? _replacementAdrId;
+    private string? _markdown;
+    private bool _supersedeConfirmed;
+    private bool _isBusy;
+    private Guid? _loadedProjectId;
+    private long _loadedProjectRevision = -1;
+
+    [Parameter, EditorRequired]
+    public ProjectView Project { get; set; } = null!;
+
+    private AdrTextSection _currentSection =>
+        _selectedAdr?.Sections.Get(_sectionKind) ??
+        new AdrTextSection(string.Empty, AdrCompleteness.NotProvided, AdrAuthorship.GeneratedFromDecision, []);
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (_loadedProjectId != Project.Id || _loadedProjectRevision != Project.Revision)
+        {
+            _loadedProjectId = Project.Id;
+            _loadedProjectRevision = Project.Revision;
+            await RefreshAdrsAsync();
+        }
+    }
+
+    private async Task CreateDraftAsync()
+    {
+        if (!_selectedDecisionId.HasValue)
+        {
+            return;
+        }
+
+        _errors.Clear();
+        _markdown = null;
+        _isBusy = true;
+        try
+        {
+            var result = await Sender.Send(new CreateAdrDraftCommand(Project.Id, _selectedDecisionId.Value));
+            if (!result.TryGetValue(out var created))
+            {
+                _errors.AddRange(result.Errors.Select(error => error.Message));
+                return;
+            }
+
+            await RefreshAdrsAsync();
+            _selectedAdrId = created.AdrId;
+            SelectAdr();
+        }
+        finally
+        {
+            _isBusy = false;
+        }
+    }
+
+    private async Task RefreshAdrsAsync()
+    {
+        var result = await Sender.Send(new ListAdrsQuery(Project.Id));
+        if (!result.TryGetValue(out var adrs))
+        {
+            _errors.AddRange(result.Errors.Select(error => error.Message));
+            _adrs = Array.Empty<AdrSnapshot>();
+            _selectedAdr = null;
+            return;
+        }
+
+        _adrs = adrs;
+        if (!_adrs.Any(adr => adr.AdrId == _selectedAdrId))
+        {
+            _selectedAdrId = _adrs.FirstOrDefault()?.AdrId;
+        }
+
+        SelectAdr();
+    }
+
+    private void SelectAdr()
+    {
+        _selectedAdr = _adrs.FirstOrDefault(adr => adr.AdrId == _selectedAdrId);
+        _sectionContent = _selectedAdr?.Sections.Get(_sectionKind).Content ?? string.Empty;
+        _replacementAdrId = null;
+        _supersedeConfirmed = false;
+        _markdown = null;
+    }
+
+    private async Task ReviseSectionAsync()
+    {
+        if (_selectedAdr is null)
+        {
+            return;
+        }
+
+        _errors.Clear();
+        _isBusy = true;
+        try
+        {
+            var result = await Sender.Send(new ReviseAdrSectionCommand(
+                Project.Id,
+                _selectedAdr.AdrId,
+                _selectedAdr.Revision,
+                _sectionKind,
+                _sectionContent,
+                _author));
+            if (!result.TryGetValue(out var revised))
+            {
+                _errors.AddRange(result.Errors.Select(error => error.Message));
+                return;
+            }
+
+            await RefreshAdrsAsync();
+            _selectedAdrId = revised.AdrId;
+            SelectAdr();
+        }
+        finally
+        {
+            _isBusy = false;
+        }
+    }
+
+    private async Task AcceptAdrAsync()
+    {
+        if (_selectedAdr is null)
+        {
+            return;
+        }
+
+        _errors.Clear();
+        _isBusy = true;
+        try
+        {
+            var result = await Sender.Send(new AcceptAdrCommand(
+                Project.Id,
+                _selectedAdr.AdrId,
+                _selectedAdr.Revision,
+                _reviewer,
+                _reviewNote));
+            if (!result.TryGetValue(out var accepted))
+            {
+                _errors.AddRange(result.Errors.Select(error => error.Message));
+                return;
+            }
+
+            await RefreshAdrsAsync();
+            _selectedAdrId = accepted.AdrId;
+            SelectAdr();
+        }
+        finally
+        {
+            _isBusy = false;
+        }
+    }
+
+    private async Task ExportMarkdownAsync()
+    {
+        if (_selectedAdr is null)
+        {
+            return;
+        }
+
+        _errors.Clear();
+        var result = await Sender.Send(new ExportAdrMarkdownQuery(Project.Id, _selectedAdr.AdrId));
+        if (!result.TryGetValue(out var markdown))
+        {
+            _errors.AddRange(result.Errors.Select(error => error.Message));
+            return;
+        }
+
+        _markdown = markdown;
+        try
+        {
+            await JS.InvokeVoidAsync(
+                "adaDownloads.downloadText",
+                $"adr-{_selectedAdr.AdrId}-r{_selectedAdr.Revision}.md",
+                markdown,
+                "text/markdown;charset=utf-8");
+        }
+        catch (JSException)
+        {
+            _errors.Add("O Markdown foi preparado, mas o navegador não conseguiu iniciar o download do arquivo.");
+        }
+    }
+
+    private async Task SupersedeAdrAsync()
+    {
+        if (_selectedAdr is null || string.IsNullOrWhiteSpace(_replacementAdrId) || !_supersedeConfirmed)
+        {
+            return;
+        }
+
+        _errors.Clear();
+        _isBusy = true;
+        try
+        {
+            var result = await Sender.Send(new SupersedeAdrCommand(
+                Project.Id,
+                _selectedAdr.AdrId,
+                _selectedAdr.Revision,
+                _replacementAdrId));
+            if (!result.TryGetValue(out var superseded))
+            {
+                _errors.AddRange(result.Errors.Select(error => error.Message));
+                return;
+            }
+
+            await RefreshAdrsAsync();
+            _selectedAdrId = superseded.AdrId;
+            SelectAdr();
+        }
+        finally
+        {
+            _isBusy = false;
+        }
+    }
+}

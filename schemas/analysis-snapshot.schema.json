@@ -1,0 +1,510 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Immutable project analysis and knowledge graph snapshot",
+  "type": "object",
+  "required": [
+    "schemaVersion",
+    "analysisId",
+    "projectId",
+    "projectRevision",
+    "projectHash",
+    "catalogHash",
+    "ruleSetHash",
+    "evaluatorVersion",
+    "createdAt",
+    "candidateGroups",
+    "limitations"
+  ],
+  "properties": {
+    "schemaVersion": { "enum": ["1.0", "2.0"] },
+    "analysisId": { "type": "string", "format": "uuid" },
+    "projectId": { "type": "string", "format": "uuid" },
+    "projectRevision": { "type": "integer", "minimum": 1 },
+    "projectHash": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" },
+    "catalogHash": { "type": "string", "pattern": "^[A-Fa-f0-9]{64}$" },
+    "ruleSetHash": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" },
+    "evaluatorVersion": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$" },
+    "createdAt": { "type": "string", "format": "date-time" },
+    "candidateGroups": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": { "$ref": "#/$defs/candidateGroup" },
+      "allOf": [
+        {
+          "contains": {
+            "properties": { "kind": { "const": "Architecture" } },
+            "required": ["kind"]
+          },
+          "minContains": 1,
+          "maxContains": 1
+        },
+        {
+          "contains": {
+            "properties": { "kind": { "const": "Pattern" } },
+            "required": ["kind"]
+          },
+          "minContains": 1,
+          "maxContains": 1
+        },
+        {
+          "contains": {
+            "properties": { "kind": { "const": "Technology" } },
+            "required": ["kind"]
+          },
+          "minContains": 1,
+          "maxContains": 1
+        }
+      ]
+    },
+    "limitations": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "graphProjection": { "$ref": "#/$defs/graphProjection" },
+    "graphExpansion": { "$ref": "#/$defs/graphExpansion" }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": { "schemaVersion": { "const": "2.0" } },
+        "required": ["schemaVersion"]
+      },
+      "then": {
+        "properties": {
+          "candidateGroups": {
+            "items": {
+              "properties": {
+                "candidates": {
+                  "items": {
+                    "properties": { "schemaVersion": { "const": "2.0" } },
+                    "required": ["schemaVersion"]
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": { "schemaVersion": { "const": "1.0" } },
+        "required": ["schemaVersion"]
+      },
+      "then": {
+        "properties": {
+          "candidateGroups": {
+            "items": {
+              "properties": {
+                "candidates": {
+                  "items": {
+                    "properties": { "schemaVersion": { "const": "1.0" } },
+                    "required": ["schemaVersion"]
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  ],
+  "additionalProperties": false,
+  "$defs": {
+    "candidateGroup": {
+      "type": "object",
+      "required": ["kind", "candidates"],
+      "properties": {
+        "kind": { "type": "string", "enum": ["Architecture", "Pattern", "Technology"] },
+        "candidates": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/recommendation" }
+        }
+      },
+      "additionalProperties": false
+    },
+    "recommendation": {
+      "type": "object",
+      "required": [
+        "schemaVersion",
+        "analysisId",
+        "candidateId",
+        "candidateKind",
+        "candidateName",
+        "candidateVersion",
+        "candidateDescription",
+        "eligibility",
+        "fitScore",
+        "evidenceCoverage",
+        "benefits",
+        "limitations",
+        "ruleEvaluations",
+        "relationFindings",
+        "warnings"
+      ],
+      "properties": {
+        "schemaVersion": { "enum": ["1.0", "2.0"] },
+        "analysisId": { "type": "string", "format": "uuid" },
+        "candidateId": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+        "candidateKind": { "type": "string", "enum": ["Architecture", "Pattern", "Technology"] },
+        "candidateName": { "type": "string", "minLength": 1 },
+        "candidateVersion": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$" },
+        "candidateDescription": { "type": "string", "minLength": 1 },
+        "candidateSource": {
+          "oneOf": [
+            { "type": "string", "minLength": 1 },
+            { "type": "null" }
+          ]
+        },
+        "candidateCategory": { "type": ["string", "null"] },
+        "candidateComplexity": { "type": ["integer", "null"] },
+        "candidateScalability": { "type": ["integer", "null"] },
+        "candidateOperationalCost": { "type": ["integer", "null"] },
+        "eligibility": { "type": "string", "enum": ["Eligible", "Excluded", "NotEvaluated"] },
+        "fitScore": {
+          "oneOf": [
+            { "type": "number", "minimum": 0, "maximum": 100 },
+            { "type": "null" }
+          ]
+        },
+        "evidenceCoverage": {
+          "oneOf": [
+            { "type": "number", "minimum": 0, "maximum": 1 },
+            { "type": "null" }
+          ]
+        },
+        "benefits": { "$ref": "#/$defs/stringList" },
+        "limitations": { "$ref": "#/$defs/stringList" },
+        "ruleEvaluations": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/ruleEvaluation" }
+        },
+        "relationFindings": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/relationFinding" }
+        },
+        "warnings": { "$ref": "#/$defs/stringList" }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": { "schemaVersion": { "const": "2.0" } },
+            "required": ["schemaVersion"]
+          },
+          "then": {
+            "required": [
+              "candidateCategory",
+              "candidateComplexity",
+              "candidateScalability",
+              "candidateOperationalCost"
+            ],
+            "properties": {
+              "ruleEvaluations": {
+                "items": {
+                  "required": ["effectsApplied"],
+                  "properties": {
+                    "effects": {
+                      "items": {
+                        "required": ["applied", "hardConstraint"]
+                      }
+                    },
+                    "factEvidence": {
+                      "items": {
+                        "required": ["phase"]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ],
+      "additionalProperties": false
+    },
+    "ruleEvaluation": {
+      "type": "object",
+      "required": [
+        "ruleId",
+        "ruleVersion",
+        "ruleContentHash",
+        "ruleName",
+        "knowledgeSource",
+        "applicability",
+        "conditionResult",
+        "effects",
+        "unknownFacts",
+        "factEvidence"
+      ],
+      "properties": {
+        "ruleId": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+        "ruleVersion": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$" },
+        "ruleContentHash": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "ruleName": { "type": "string", "minLength": 1 },
+        "source": {
+          "oneOf": [
+            { "type": "string", "minLength": 1 },
+            { "type": "null" }
+          ]
+        },
+        "knowledgeSource": { "type": "string", "minLength": 1 },
+        "applicability": { "type": "string", "enum": ["Applicable", "NotApplicable", "Unknown"] },
+        "conditionResult": { "type": "string", "enum": ["Matched", "NotMatched", "Unknown", "NotEvaluated"] },
+        "effectsApplied": { "type": "boolean" },
+        "effects": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/effect" }
+        },
+        "unknownFacts": { "$ref": "#/$defs/stringList" },
+        "factEvidence": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/factEvidence" }
+        }
+      },
+      "additionalProperties": false
+    },
+    "effect": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": ["type", "dimension", "points", "weight", "rationale"],
+          "properties": {
+            "type": { "const": "Score" },
+            "applied": { "type": "boolean" },
+            "hardConstraint": { "const": false },
+            "dimension": { "const": "fit" },
+            "points": { "type": "integer", "minimum": -100, "maximum": 100 },
+            "weight": { "type": "integer", "minimum": 1, "maximum": 100 },
+            "rationale": { "type": "string", "minLength": 1 }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": ["type", "applied", "hardConstraint", "weight", "rationale"],
+          "properties": {
+            "type": { "const": "Exclude" },
+            "applied": { "type": "boolean" },
+            "hardConstraint": { "const": true },
+            "weight": { "type": "integer", "minimum": 1, "maximum": 100 },
+            "rationale": { "type": "string", "minLength": 1 }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": ["type", "weight", "severity", "rationale"],
+          "properties": {
+            "type": { "const": "Flag" },
+            "applied": { "type": "boolean" },
+            "hardConstraint": { "const": false },
+            "weight": { "type": "integer", "minimum": 1, "maximum": 100 },
+            "severity": { "type": "string", "enum": ["Info", "Warning", "Risk"] },
+            "rationale": { "type": "string", "minLength": 1 }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "factEvidence": {
+      "type": "object",
+      "required": ["fact", "status"],
+      "properties": {
+        "fact": { "type": "string", "minLength": 1 },
+        "phase": { "type": "string", "enum": ["Applicability", "Condition"] },
+        "operator": { "type": "string", "minLength": 1 },
+        "expectedValue": { "type": "string" },
+        "expectedInteger": { "type": "integer" },
+        "value": { "type": "string" },
+        "status": { "type": "string", "enum": ["Confirmed", "Unknown"] }
+      },
+      "additionalProperties": false
+    },
+    "relationFinding": {
+      "type": "object",
+      "required": ["type", "sourceId", "targetId", "status", "rationale"],
+      "properties": {
+        "type": { "type": "string", "enum": ["DependsOn", "Recommends", "ConflictsWith", "AlternativeTo"] },
+        "sourceId": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+        "targetId": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+        "status": { "type": "string", "enum": ["Satisfied", "Missing", "Suggested", "Relevant", "Conflict", "Alternative", "Unknown", "NotEvaluated"] },
+        "rationale": { "type": "string", "minLength": 1 },
+        "relationKey": { "type": ["string", "null"], "minLength": 1 },
+        "applicability": { "type": ["string", "null"], "enum": ["Applicable", "NotApplicable", "Unknown", null] },
+        "sourceVersion": { "type": ["string", "null"], "pattern": "^\\d+\\.\\d+\\.\\d+$" },
+        "targetVersion": { "type": ["string", "null"], "pattern": "^\\d+\\.\\d+\\.\\d+$" },
+        "knowledgeSource": { "type": ["string", "null"], "minLength": 1 },
+        "relationSource": { "type": ["string", "null"], "minLength": 1 },
+        "unknownFacts": {
+          "oneOf": [
+            { "$ref": "#/$defs/stringList" },
+            { "type": "null" }
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "graphProjection": {
+      "type": "object",
+      "required": ["schemaVersion", "catalogHash", "nodes", "relations", "warnings"],
+      "properties": {
+        "schemaVersion": { "const": "1.0" },
+        "catalogHash": { "type": "string", "pattern": "^[A-Fa-f0-9]{64}$" },
+        "nodes": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/graphNode" }
+        },
+        "relations": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/graphRelation" }
+        },
+        "warnings": { "$ref": "#/$defs/stringList" }
+      },
+      "additionalProperties": false
+    },
+    "graphNode": {
+      "type": "object",
+      "required": ["itemId", "kind", "name", "version", "knowledgeSource"],
+      "properties": {
+        "itemId": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+        "kind": { "type": "string", "enum": ["Architecture", "Pattern", "Technology"] },
+        "name": { "type": "string", "minLength": 1 },
+        "version": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$" },
+        "source": { "type": ["string", "null"], "minLength": 1 },
+        "knowledgeSource": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": false
+    },
+    "graphRelation": {
+      "type": "object",
+      "required": [
+        "relationKey", "sourceId", "targetId", "type", "conditionKey",
+        "sourceVersion", "targetVersion", "declarations"
+      ],
+      "properties": {
+        "relationKey": { "type": "string", "minLength": 1 },
+        "sourceId": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+        "targetId": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+        "type": { "type": "string", "enum": ["DependsOn", "Recommends", "ConflictsWith", "AlternativeTo"] },
+        "conditionKey": { "type": "string", "minLength": 1 },
+        "sourceVersion": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$" },
+        "targetVersion": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$" },
+        "declarations": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/graphRelationDeclaration" }
+        }
+      },
+      "additionalProperties": false
+    },
+    "graphRelationDeclaration": {
+      "type": "object",
+      "required": [
+        "relationKey", "type", "sourceId", "targetId", "conditionKey", "rationale",
+        "knowledgeSource"
+      ],
+      "properties": {
+        "relationKey": { "type": "string", "minLength": 1 },
+        "type": { "type": "string", "enum": ["DependsOn", "Recommends", "ConflictsWith", "AlternativeTo"] },
+        "sourceId": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+        "targetId": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+        "conditionKey": { "type": "string", "minLength": 1 },
+        "rationale": { "type": "string", "minLength": 1 },
+        "source": { "type": ["string", "null"], "minLength": 1 },
+        "knowledgeSource": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": false
+    },
+    "graphExpansion": {
+      "type": "object",
+      "required": [
+        "schemaVersion", "catalogHash", "roots", "nodes", "dependencies",
+        "truncated", "maximumDepth", "maximumPathCount", "evaluatedPathCount",
+        "warnings"
+      ],
+      "properties": {
+        "schemaVersion": { "const": "1.0" },
+        "catalogHash": { "type": "string", "pattern": "^[A-Fa-f0-9]{64}$" },
+        "roots": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/graphExpansionRoot" }
+        },
+        "nodes": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/graphExpansionNode" }
+        },
+        "dependencies": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/graphDependencyFinding" }
+        },
+        "truncated": { "type": "boolean" },
+        "maximumDepth": { "type": "integer", "minimum": 1 },
+        "maximumPathCount": { "type": "integer", "minimum": 1 },
+        "evaluatedPathCount": { "type": "integer", "minimum": 0 },
+        "warnings": { "$ref": "#/$defs/stringList" }
+      },
+      "additionalProperties": false
+    },
+    "graphExpansionRoot": {
+      "type": "object",
+      "required": ["itemId", "role"],
+      "properties": {
+        "itemId": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+        "role": { "type": "string", "enum": ["ConfirmedSelection", "RecommendationCandidate"] }
+      },
+      "additionalProperties": false
+    },
+    "graphExpansionNode": {
+      "type": "object",
+      "required": ["itemId", "roles", "selectionStatus"],
+      "properties": {
+        "itemId": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+        "roles": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "type": "string", "enum": ["Root", "Required", "PotentialRequired"] }
+        },
+        "selectionStatus": { "type": "string", "enum": ["Confirmed", "NotSelected"] }
+      },
+      "additionalProperties": false
+    },
+    "graphDependencyFinding": {
+      "type": "object",
+      "required": [
+        "rootId", "relationKey", "sourceId", "targetId", "applicability",
+        "finding", "rationale", "sourceVersion", "targetVersion",
+        "knowledgeSource", "unknownFacts", "pathsFromRoot"
+      ],
+      "properties": {
+        "rootId": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+        "relationKey": { "type": "string", "minLength": 1 },
+        "sourceId": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+        "targetId": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+        "applicability": { "type": "string", "enum": ["Applicable", "NotApplicable", "Unknown"] },
+        "finding": { "type": "string", "enum": ["Satisfied", "Missing", "Unknown", "NotEvaluated"] },
+        "rationale": { "type": "string", "minLength": 1 },
+        "sourceVersion": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$" },
+        "targetVersion": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$" },
+        "knowledgeSource": { "type": "string", "minLength": 1 },
+        "relationSource": { "type": ["string", "null"], "minLength": 1 },
+        "unknownFacts": { "$ref": "#/$defs/stringList" },
+        "pathsFromRoot": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "type": "string", "minLength": 1 }
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "stringList": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    }
+  }
+}

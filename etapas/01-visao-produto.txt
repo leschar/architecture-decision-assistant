@@ -1,0 +1,49 @@
+Atue como um Product Owner Sênior, Software Architect e System Analyst.
+
+Quero criar uma plataforma desktop/web utilizando .NET 9 e Blazor.
+
+O objetivo da plataforma é auxiliar arquitetos de software na tomada de decisões arquiteturais.
+
+A plataforma NÃO deve utilizar IA em runtime.
+
+Toda inteligência deverá ser construída através de:
+
+- Regras
+- Grafos
+- Sistema especialista
+- Base de conhecimento estruturada
+- Arquivos JSON
+
+A plataforma deverá:
+
+- Interpretar requisitos funcionais e não funcionais
+- Permitir entrada por texto livre
+- Permitir entrada por questionário guiado
+- Permitir entrada manual através de seleção de tecnologias
+- Recomendar arquiteturas
+- Recomendar tecnologias
+- Recomendar design patterns
+- Recomendar boas práticas
+- Mostrar dependências
+- Mostrar conflitos
+- Mostrar trade-offs
+- Explicar as decisões tomadas
+- Gerar diagramas automaticamente
+- Gerar ADRs automaticamente
+- Salvar projetos
+- Reutilizar conhecimento de projetos anteriores
+- Permitir comparação entre arquiteturas
+
+Quero que você produza:
+
+1. Visão do produto.
+2. Objetivos.
+3. Persona dos usuários.
+4. Problemas que a plataforma resolve.
+5. Escopo MVP.
+6. Escopo completo.
+7. Casos de uso principais.
+8. Casos de uso futuros.
+9. Roadmap evolutivo.
+
+Crie o documento da forma mais completa possível.

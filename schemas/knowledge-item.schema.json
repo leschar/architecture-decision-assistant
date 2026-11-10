@@ -1,0 +1,430 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Architecture Decision Assistant knowledge item",
+  "description": "Canonical schema for versioned knowledge items and generated recommendation snapshots.",
+  "oneOf": [
+    { "$ref": "#/$defs/architecture" },
+    { "$ref": "#/$defs/pattern" },
+    { "$ref": "#/$defs/technology" },
+    { "$ref": "#/$defs/principle" },
+    { "$ref": "#/$defs/bestPractice" },
+    { "$ref": "#/$defs/antiPattern" },
+    { "$ref": "#/$defs/dependency" },
+    { "$ref": "#/$defs/tradeOff" },
+    { "$ref": "#/$defs/rule" },
+    { "$ref": "#/$defs/projectTemplate" }
+  ],
+  "$defs": {
+    "stringList": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "relation": {
+      "type": "object",
+      "required": ["type", "targetId", "rationale"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["DependsOn", "Recommends", "ConflictsWith", "AlternativeTo"]
+        },
+        "targetId": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+        "rationale": { "type": "string", "minLength": 1 },
+        "conditions": {
+          "$ref": "#/$defs/stringList",
+          "description": "Legacy descriptive context only; not executable."
+        },
+        "appliesWhen": {
+          "$ref": "#/$defs/condition",
+          "description": "Declarative applicability using the rule engine's restricted condition DSL."
+        },
+        "source": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": false
+    },
+    "base": {
+      "type": "object",
+      "required": ["id", "kind", "schemaVersion", "version", "name", "description"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "Architecture", "Pattern", "Technology", "Principle", "BestPractice",
+            "AntiPattern", "Dependency", "TradeOff", "Rule",
+            "ProjectTemplate"
+          ]
+        },
+        "schemaVersion": { "type": "string", "pattern": "^\\d+\\.\\d+$" },
+        "version": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$" },
+        "name": { "type": "string", "minLength": 1 },
+        "description": { "type": "string", "minLength": 1 },
+        "tags": { "$ref": "#/$defs/stringList" },
+        "source": { "type": "string", "minLength": 1 },
+        "updatedAt": { "type": "string", "format": "date-time" },
+        "relations": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/relation" }
+        }
+      }
+    },
+    "architecture": {
+      "allOf": [
+        { "$ref": "#/$defs/base" },
+        {
+          "type": "object",
+          "required": [
+            "category", "advantages", "disadvantages", "useWhen", "avoidWhen",
+            "complexity", "scalability"
+          ],
+          "properties": {
+            "kind": { "const": "Architecture" },
+            "category": { "type": "string", "minLength": 1 },
+            "advantages": { "$ref": "#/$defs/stringList" },
+            "disadvantages": { "$ref": "#/$defs/stringList" },
+            "useWhen": { "$ref": "#/$defs/stringList" },
+            "avoidWhen": { "$ref": "#/$defs/stringList" },
+            "complexity": { "type": "integer", "minimum": 1, "maximum": 10 },
+            "scalability": { "type": "integer", "minimum": 1, "maximum": 10 }
+          }
+        }
+      ],
+      "unevaluatedProperties": false
+    },
+    "pattern": {
+      "allOf": [
+        { "$ref": "#/$defs/base" },
+        {
+          "type": "object",
+          "required": ["category", "problem", "solution", "benefits", "risks", "complexity"],
+          "properties": {
+            "kind": { "const": "Pattern" },
+            "category": { "type": "string", "minLength": 1 },
+            "problem": { "type": "string", "minLength": 1 },
+            "solution": { "type": "string", "minLength": 1 },
+            "benefits": { "$ref": "#/$defs/stringList" },
+            "risks": { "$ref": "#/$defs/stringList" },
+            "complexity": { "type": "integer", "minimum": 1, "maximum": 10 },
+            "useWhen": { "$ref": "#/$defs/stringList" },
+            "avoidWhen": { "$ref": "#/$defs/stringList" }
+          }
+        }
+      ],
+      "unevaluatedProperties": false
+    },
+    "technology": {
+      "allOf": [
+        { "$ref": "#/$defs/base" },
+        {
+          "type": "object",
+          "required": [
+            "category", "capabilities", "useWhen", "avoidWhen",
+            "complexity", "operationalCost"
+          ],
+          "properties": {
+            "kind": { "const": "Technology" },
+            "category": { "type": "string", "minLength": 1 },
+            "capabilities": { "$ref": "#/$defs/stringList" },
+            "useWhen": { "$ref": "#/$defs/stringList" },
+            "avoidWhen": { "$ref": "#/$defs/stringList" },
+            "benefits": { "$ref": "#/$defs/stringList" },
+            "risks": { "$ref": "#/$defs/stringList" },
+            "complexity": { "type": "integer", "minimum": 1, "maximum": 10 },
+            "operationalCost": { "type": "integer", "minimum": 1, "maximum": 10 }
+          }
+        }
+      ],
+      "unevaluatedProperties": false
+    },
+    "principle": {
+      "allOf": [
+        { "$ref": "#/$defs/base" },
+        {
+          "type": "object",
+          "required": ["statement", "rationale", "scope"],
+          "properties": {
+            "kind": { "const": "Principle" },
+            "statement": { "type": "string", "minLength": 1 },
+            "rationale": { "type": "string", "minLength": 1 },
+            "scope": { "$ref": "#/$defs/stringList" }
+          }
+        }
+      ],
+      "unevaluatedProperties": false
+    },
+    "bestPractice": {
+      "allOf": [
+        { "$ref": "#/$defs/base" },
+        {
+          "type": "object",
+          "required": ["guidance", "appliesTo"],
+          "properties": {
+            "kind": { "const": "BestPractice" },
+            "guidance": { "type": "string", "minLength": 1 },
+            "rationale": { "type": "string", "minLength": 1 },
+            "appliesTo": {
+              "type": "array",
+              "items": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" }
+            }
+          }
+        }
+      ],
+      "unevaluatedProperties": false
+    },
+    "antiPattern": {
+      "allOf": [
+        { "$ref": "#/$defs/base" },
+        {
+          "type": "object",
+          "required": ["symptoms", "consequences", "remediation"],
+          "properties": {
+            "kind": { "const": "AntiPattern" },
+            "context": { "type": "string", "minLength": 1 },
+            "symptoms": { "$ref": "#/$defs/stringList" },
+            "consequences": { "$ref": "#/$defs/stringList" },
+            "remediation": { "$ref": "#/$defs/stringList" }
+          }
+        }
+      ],
+      "unevaluatedProperties": false
+    },
+    "dependency": {
+      "allOf": [
+        { "$ref": "#/$defs/base" },
+        {
+          "type": "object",
+          "required": ["sourceId", "targetId", "relationType", "rationale"],
+          "properties": {
+            "kind": { "const": "Dependency" },
+            "sourceId": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+            "targetId": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+            "relationType": {
+              "type": "string",
+              "enum": ["DependsOn", "Recommends", "ConflictsWith", "AlternativeTo"]
+            },
+            "rationale": { "type": "string", "minLength": 1 },
+            "conditions": { "$ref": "#/$defs/stringList" }
+          }
+        }
+      ],
+      "unevaluatedProperties": false
+    },
+    "tradeOff": {
+      "allOf": [
+        { "$ref": "#/$defs/base" },
+        {
+          "type": "object",
+          "required": ["context", "benefits", "costs"],
+          "properties": {
+            "kind": { "const": "TradeOff" },
+            "context": { "type": "string", "minLength": 1 },
+            "benefits": { "$ref": "#/$defs/stringList" },
+            "costs": { "$ref": "#/$defs/stringList" },
+            "appliesTo": {
+              "type": "array",
+              "items": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" }
+            }
+          }
+        }
+      ],
+      "unevaluatedProperties": false
+    },
+    "condition": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": ["fact", "operator"],
+          "properties": {
+            "fact": { "type": "string", "minLength": 1 },
+            "operator": {
+              "type": "string",
+              "enum": [
+                "Equals", "NotEquals", "GreaterThan", "GreaterThanOrEqual",
+                "LessThan", "LessThanOrEqual", "Contains", "In", "Exists",
+                "NotExists"
+              ]
+            },
+            "value": {
+              "oneOf": [
+                { "type": ["string", "number", "boolean", "null"] },
+                {
+                  "type": "array",
+                  "maxItems": 200,
+                  "items": { "type": ["string", "number", "boolean", "null"] }
+                }
+              ]
+            }
+          },
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "operator": { "enum": ["Exists", "NotExists"] }
+                },
+                "required": ["operator"]
+              },
+              "then": { "not": { "required": ["value"] } },
+              "else": { "required": ["value"] }
+            }
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": ["allOf"],
+          "properties": {
+            "allOf": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 64,
+              "items": { "$ref": "#/$defs/condition" }
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": ["anyOf"],
+          "properties": {
+            "anyOf": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 64,
+              "items": { "$ref": "#/$defs/condition" }
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": ["not"],
+          "properties": {
+            "not": { "$ref": "#/$defs/condition" }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "effect": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": ["type", "dimension", "points", "rationale"],
+          "properties": {
+            "type": { "const": "Score" },
+            "dimension": { "const": "fit" },
+            "points": { "type": "integer", "minimum": -100, "maximum": 100 },
+            "rationale": { "type": "string", "minLength": 1 }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": ["type", "hardConstraint", "rationale"],
+          "properties": {
+            "type": { "const": "Exclude" },
+            "hardConstraint": { "const": true },
+            "rationale": { "type": "string", "minLength": 1 }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": ["type", "severity", "rationale"],
+          "properties": {
+            "type": { "const": "Flag" },
+            "severity": { "type": "string", "enum": ["Info", "Warning", "Risk"] },
+            "rationale": { "type": "string", "minLength": 1 }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "ruleTarget": {
+      "type": "object",
+      "required": ["kinds"],
+      "properties": {
+        "kinds": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 3,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "enum": ["Architecture", "Pattern", "Technology"]
+          }
+        },
+        "ids": {
+          "type": "array",
+          "maxItems": 200,
+          "uniqueItems": true,
+          "items": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" }
+        },
+        "tags": {
+          "type": "array",
+          "maxItems": 200,
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1 }
+        }
+      },
+      "additionalProperties": false
+    },
+    "rule": {
+      "allOf": [
+        { "$ref": "#/$defs/base" },
+        {
+          "type": "object",
+          "required": [
+            "category", "enabled", "weight", "appliesTo", "conditions", "effects"
+          ],
+          "properties": {
+            "kind": { "const": "Rule" },
+            "category": { "type": "string", "minLength": 1 },
+            "enabled": { "type": "boolean" },
+            "weight": { "type": "integer", "minimum": 1, "maximum": 100 },
+            "appliesTo": { "$ref": "#/$defs/ruleTarget" },
+            "appliesWhen": { "$ref": "#/$defs/condition" },
+            "conditions": { "$ref": "#/$defs/condition" },
+            "effects": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 16,
+              "items": { "$ref": "#/$defs/effect" },
+              "allOf": [
+                {
+                  "contains": {
+                    "type": "object",
+                    "required": ["type"],
+                    "properties": { "type": { "const": "Score" } }
+                  },
+                  "minContains": 0,
+                  "maxContains": 1
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "unevaluatedProperties": false
+    },
+    "projectTemplate": {
+      "allOf": [
+        { "$ref": "#/$defs/base" },
+        {
+          "type": "object",
+          "required": ["purpose", "requirements", "context"],
+          "properties": {
+            "kind": { "const": "ProjectTemplate" },
+            "purpose": { "type": "string", "minLength": 1 },
+            "requirements": { "$ref": "#/$defs/stringList" },
+            "context": { "type": "object" },
+            "suggestedItemIds": {
+              "type": "array",
+              "items": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" }
+            }
+          }
+        }
+      ],
+      "unevaluatedProperties": false
+    }
+  }
+}

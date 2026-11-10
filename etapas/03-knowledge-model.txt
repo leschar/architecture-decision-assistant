@@ -1,0 +1,39 @@
+Atue como um arquiteto de software especialista em sistemas especialistas.
+
+Crie o modelo de conhecimento da aplicação.
+
+O sistema deverá armazenar seu conhecimento em arquivos JSON.
+
+Defina:
+
+- Architecture
+- Pattern
+- Technology
+- Principle
+- BestPractice
+- AntiPattern
+- Dependency
+- TradeOff
+- Rule
+- Recommendation
+- ProjectTemplate
+
+Para cada tipo explique:
+
+- Campos obrigatórios
+- Campos opcionais
+- Relacionamentos
+- Dependências
+- Estratégia de versionamento
+
+Depois crie exemplos completos de JSON para:
+
+- Monolith
+- Modular Monolith
+- Microservices
+- CQRS
+- Saga
+- Outbox
+- Redis
+- RabbitMQ
+- Kafka

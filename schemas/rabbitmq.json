@@ -1,0 +1,41 @@
+{
+  "id": "rabbitmq",
+  "kind": "Technology",
+  "schemaVersion": "1.0",
+  "version": "1.0.0",
+  "name": "RabbitMQ",
+  "description": "Message broker que oferece mensageria baseada em filas e roteamento de mensagens.",
+  "category": "Messaging",
+  "tags": ["message-broker", "messaging", "queues"],
+  "capabilities": [
+    "Roteamento de mensagens por exchanges e filas.",
+    "Distribuição de trabalho entre consumidores.",
+    "Comunicação assíncrona entre componentes."
+  ],
+  "useWhen": [
+    "É necessário distribuir comandos ou tarefas assíncronas entre consumidores.",
+    "O roteamento flexível de mensagens é relevante para a integração."
+  ],
+  "avoidWhen": [
+    "O requisito central é retenção de eventos e replay de grandes fluxos.",
+    "A equipe não consegue operar e monitorar um broker."
+  ],
+  "benefits": [
+    "Oferece padrões de roteamento e filas apropriados a diversos fluxos de trabalho.",
+    "Ajuda a desacoplar produtores e consumidores no tempo."
+  ],
+  "risks": [
+    "Introduz operação, monitoramento e tratamento de mensagens não processadas.",
+    "Entrega e ordenação dependem da configuração e do desenho do fluxo."
+  ],
+  "complexity": 5,
+  "operationalCost": 5,
+  "relations": [
+    {
+      "type": "AlternativeTo",
+      "targetId": "kafka",
+      "rationale": "Ambos podem atender a necessidades de mensageria, mas diferem em modelo de consumo, retenção, ordenação e operação.",
+      "conditions": ["A escolha deve considerar os requisitos de retenção e replay."]
+    }
+  ]
+}

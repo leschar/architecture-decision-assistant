@@ -1,0 +1,36 @@
+{
+  "id": "high-scalability-fit",
+  "kind": "Rule",
+  "schemaVersion": "1.0",
+  "version": "1.0.0",
+  "name": "Aderência a alta escalabilidade",
+  "description": "Favorece arquiteturas com maior capacidade de escala quando o requisito de escala é alto.",
+  "category": "ArchitectureFit",
+  "enabled": true,
+  "weight": 4,
+  "appliesTo": {
+    "kinds": ["Architecture"]
+  },
+  "appliesWhen": {
+    "fact": "project.scalabilityTarget",
+    "operator": "Equals",
+    "value": "High"
+  },
+  "conditions": {
+    "allOf": [
+      {
+        "fact": "candidate.scalability",
+        "operator": "GreaterThanOrEqual",
+        "value": 8
+      }
+    ]
+  },
+  "effects": [
+    {
+      "type": "Score",
+      "dimension": "fit",
+      "points": 70,
+      "rationale": "A capacidade de escala declarada para esta arquitetura corresponde ao alvo de alta escalabilidade."
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "id": "monolith",
+  "kind": "Architecture",
+  "schemaVersion": "1.0",
+  "version": "1.0.0",
+  "name": "Monolith",
+  "description": "Arquitetura em que a aplicação é construída e implantada como uma única unidade executável.",
+  "category": "Deployment",
+  "tags": ["single-deployment", "application-architecture"],
+  "advantages": [
+    "Simplicidade inicial de desenvolvimento, implantação e depuração.",
+    "Chamadas internas podem evitar a latência e falhas de comunicação de rede entre serviços."
+  ],
+  "disadvantages": [
+    "Escala e implantação normalmente são feitas para a aplicação como um todo.",
+    "Sem limites modulares explícitos, o acoplamento pode crescer com o tempo."
+  ],
+  "useWhen": [
+    "O produto é pequeno ou está em estágio inicial.",
+    "Uma equipe consegue desenvolver e operar a aplicação como uma unidade."
+  ],
+  "avoidWhen": [
+    "Partes do sistema exigem ciclos de implantação ou escala independentes.",
+    "A aplicação já possui limites de domínio e equipes que precisam de autonomia operacional."
+  ],
+  "complexity": 3,
+  "scalability": 5
+}

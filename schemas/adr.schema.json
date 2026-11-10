@@ -1,0 +1,176 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Architectural Decision Record",
+  "description": "Versioned ADR document linked to a human-authored project decision. It does not itself make or accept the decision.",
+  "type": "object",
+  "required": [
+    "schemaVersion",
+    "adrId",
+    "projectId",
+    "decisionId",
+    "revision",
+    "status",
+    "title",
+    "sections",
+    "sourceSnapshot",
+    "createdAt",
+    "updatedAt"
+  ],
+  "properties": {
+    "schemaVersion": { "const": "1.0" },
+    "adrId": { "type": "string", "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]*$" },
+    "projectId": { "type": "string", "minLength": 1 },
+    "decisionId": { "type": "string", "minLength": 1 },
+    "revision": { "type": "integer", "minimum": 1 },
+    "status": {
+      "type": "string",
+      "enum": ["Draft", "NeedsReview", "Accepted", "Superseded"]
+    },
+    "title": { "type": "string", "minLength": 1 },
+    "sections": {
+      "type": "object",
+      "required": [
+        "context",
+        "problem",
+        "alternatives",
+        "decision",
+        "consequences",
+        "risks",
+        "benefits",
+        "justification",
+        "tradeOffs"
+      ],
+      "properties": {
+        "context": { "$ref": "#/$defs/textSection" },
+        "problem": { "$ref": "#/$defs/textSection" },
+        "alternatives": {
+          "type": "object",
+          "required": ["completeness", "items", "sourceReferences"],
+          "properties": {
+            "completeness": { "$ref": "#/$defs/completeness" },
+            "items": {
+              "type": "array",
+              "items": { "$ref": "#/$defs/alternative" }
+            },
+            "sourceReferences": { "$ref": "#/$defs/sourceReferences" }
+          },
+          "additionalProperties": false
+        },
+        "decision": { "$ref": "#/$defs/textSection" },
+        "consequences": { "$ref": "#/$defs/textSection" },
+        "risks": { "$ref": "#/$defs/textSection" },
+        "benefits": { "$ref": "#/$defs/textSection" },
+        "justification": { "$ref": "#/$defs/textSection" },
+        "tradeOffs": { "$ref": "#/$defs/textSection" }
+      },
+      "additionalProperties": false
+    },
+    "sourceSnapshot": {
+      "type": "object",
+      "required": ["projectRevision", "decisionRevision"],
+      "properties": {
+        "projectRevision": { "type": "string", "minLength": 1 },
+        "decisionRevision": { "type": "string", "minLength": 1 },
+        "analysisId": { "type": "string", "minLength": 1 },
+        "catalogFingerprint": { "type": "string", "minLength": 1 },
+        "generatorVersion": {
+          "type": "string",
+          "pattern": "^\\d+\\.\\d+\\.\\d+$"
+        }
+      },
+      "additionalProperties": false
+    },
+    "supersedesAdrId": { "type": "string", "minLength": 1 },
+    "supersededByAdrId": {
+      "type": "string",
+      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]*$"
+    },
+    "review": {
+      "type": "object",
+      "required": ["reviewedBy", "reviewedAt"],
+      "properties": {
+        "reviewedBy": { "type": "string", "minLength": 1 },
+        "reviewedAt": { "type": "string", "format": "date-time" },
+        "note": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "createdAt": { "type": "string", "format": "date-time" },
+    "updatedAt": { "type": "string", "format": "date-time" }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": { "status": { "const": "Accepted" } },
+        "required": ["status"]
+      },
+      "then": { "required": ["review"] }
+    }
+  ],
+  "additionalProperties": false,
+  "$defs": {
+    "completeness": {
+      "type": "string",
+      "enum": ["Complete", "Partial", "NotProvided"]
+    },
+    "sourceReference": {
+      "type": "object",
+      "required": ["sourceType", "sourceId"],
+      "properties": {
+        "sourceType": {
+          "type": "string",
+          "enum": [
+            "Decision",
+            "ProjectRequirement",
+            "Analysis",
+            "Recommendation",
+            "KnowledgeItem",
+            "KnowledgeRelation",
+            "ManualInput"
+          ]
+        },
+        "sourceId": { "type": "string", "minLength": 1 },
+        "sourceVersion": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": false
+    },
+    "sourceReferences": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/sourceReference" }
+    },
+    "textSection": {
+      "type": "object",
+      "required": [
+        "content",
+        "completeness",
+        "authorship",
+        "sourceReferences"
+      ],
+      "properties": {
+        "content": { "type": "string" },
+        "completeness": { "$ref": "#/$defs/completeness" },
+        "authorship": {
+          "type": "string",
+          "enum": [
+            "GeneratedFromDecision",
+            "UserAuthored",
+            "KnowledgeCatalog"
+          ]
+        },
+        "sourceReferences": { "$ref": "#/$defs/sourceReferences" }
+      },
+      "additionalProperties": false
+    },
+    "alternative": {
+      "type": "object",
+      "required": ["alternativeId", "name", "sourceReferences"],
+      "properties": {
+        "alternativeId": { "type": "string", "minLength": 1 },
+        "name": { "type": "string", "minLength": 1 },
+        "description": { "type": "string" },
+        "sourceReferences": { "$ref": "#/$defs/sourceReferences" }
+      },
+      "additionalProperties": false
+    }
+  }
+}

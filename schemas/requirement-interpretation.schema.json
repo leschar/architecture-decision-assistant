@@ -1,0 +1,211 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Deterministic requirement interpretation result",
+  "description": "Auditable lexical hypotheses. Only explicitly confirmed hypotheses may become project requirements or rule facts.",
+  "type": "object",
+  "required": [
+    "schemaVersion",
+    "interpretationId",
+    "sourceText",
+    "sourceTextHash",
+    "locale",
+    "vocabulary",
+    "engine",
+    "executedAt",
+    "mentions",
+    "hypotheses"
+  ],
+  "properties": {
+    "schemaVersion": { "const": "1.0" },
+    "interpretationId": { "type": "string", "minLength": 1 },
+    "sourceText": { "type": "string" },
+    "sourceTextHash": {
+      "type": "string",
+      "pattern": "^sha256:[a-f0-9]{64}$"
+    },
+    "locale": { "type": "string", "minLength": 2 },
+    "vocabulary": {
+      "type": "object",
+      "required": ["vocabularyId", "version", "contentHash"],
+      "properties": {
+        "vocabularyId": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "version": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$" },
+        "contentHash": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": false
+    },
+    "engine": {
+      "type": "object",
+      "required": ["version", "normalizationPolicyVersion"],
+      "properties": {
+        "version": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$" },
+        "normalizationPolicyVersion": {
+          "type": "string",
+          "pattern": "^\\d+\\.\\d+\\.\\d+$"
+        }
+      },
+      "additionalProperties": false
+    },
+    "executedAt": { "type": "string", "format": "date-time" },
+    "mentions": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/mention" }
+    },
+    "hypotheses": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/hypothesis" }
+    },
+    "uncoveredSpans": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/span" }
+    },
+    "warnings": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    }
+  },
+  "$defs": {
+    "span": {
+      "type": "object",
+      "required": ["start", "end"],
+      "properties": {
+        "start": { "type": "integer", "minimum": 0 },
+        "end": { "type": "integer", "minimum": 1 }
+      },
+      "additionalProperties": false
+    },
+    "mention": {
+      "type": "object",
+      "required": [
+        "id",
+        "span",
+        "surface",
+        "normalizedSurface",
+        "lexicalEntryId",
+        "tagIds",
+        "polarity"
+      ],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "span": { "$ref": "#/$defs/span" },
+        "surface": { "type": "string", "minLength": 1 },
+        "normalizedSurface": { "type": "string", "minLength": 1 },
+        "lexicalEntryId": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "tagIds": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z0-9]+(?:[.-][a-z0-9]+)*$"
+          }
+        },
+        "polarity": {
+          "type": "string",
+          "enum": ["Affirmed", "Negated", "Uncertain"]
+        },
+        "negationCue": {
+          "type": "object",
+          "required": ["surface", "span", "policyRule"],
+          "properties": {
+            "surface": { "type": "string", "minLength": 1 },
+            "span": { "$ref": "#/$defs/span" },
+            "policyRule": { "type": "string", "minLength": 1 }
+          },
+          "additionalProperties": false
+        },
+        "ambiguityGroup": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+        }
+      },
+      "additionalProperties": false
+    },
+    "hypothesis": {
+      "type": "object",
+      "required": [
+        "id",
+        "tagId",
+        "polarity",
+        "status",
+        "evidenceMentionIds"
+      ],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "tagId": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+(?:[.-][a-z0-9]+)*$"
+        },
+        "polarity": {
+          "type": "string",
+          "enum": ["Affirmed", "Negated", "Uncertain"]
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "NeedsConfirmation",
+            "Ambiguous",
+            "Conflict",
+            "Negated",
+            "Confirmed",
+            "Rejected"
+          ]
+        },
+        "evidenceMentionIds": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "alternativeTagIds": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z0-9]+(?:[.-][a-z0-9]+)*$"
+          }
+        },
+        "issueCodes": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "enum": [
+              "AmbiguousMeaning",
+              "MissingMeasure",
+              "MissingUnit",
+              "MissingScenario",
+              "MissingTimeHorizon",
+              "ConflictingEvidence",
+              "UncertainNegationScope",
+              "InsufficientContext"
+            ]
+          }
+        },
+        "clarificationQuestion": { "type": "string", "minLength": 1 },
+        "reviewedBy": { "type": "string", "minLength": 1 },
+        "reviewedAt": { "type": "string", "format": "date-time" },
+        "reviewNote": { "type": "string" }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "status": { "enum": ["Confirmed", "Rejected"] }
+            },
+            "required": ["status"]
+          },
+          "then": { "required": ["reviewedBy", "reviewedAt"] }
+        }
+      ],
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

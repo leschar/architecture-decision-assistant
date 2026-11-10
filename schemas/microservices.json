@@ -1,0 +1,30 @@
+{
+  "id": "microservices",
+  "kind": "Architecture",
+  "schemaVersion": "1.0",
+  "version": "1.0.0",
+  "name": "Microservices",
+  "description": "Arquitetura composta por serviços independentes, organizados em torno de capacidades de negócio e com implantação e escalabilidade independentes.",
+  "category": "Distributed",
+  "tags": ["distributed-systems", "service-oriented"],
+  "advantages": [
+    "Permite escalar serviços de forma independente quando há gargalos distintos.",
+    "Pode permitir implantação independente de partes do sistema.",
+    "Pode alinhar serviços a limites de domínio bem definidos."
+  ],
+  "disadvantages": [
+    "Aumenta a complexidade operacional e de desenvolvimento distribuído.",
+    "Exige observabilidade distribuída e tratamento de falhas de rede.",
+    "Pode elevar custos de infraestrutura e carga cognitiva da equipe."
+  ],
+  "useWhen": [
+    "Há domínios com limites estáveis e necessidades de escala ou implantação diferentes.",
+    "A organização consegue operar sistemas distribuídos e possui equipes com autonomia."
+  ],
+  "avoidWhen": [
+    "O produto está em estágio inicial e os limites de domínio ainda são incertos.",
+    "A equipe não consegue sustentar implantação, observabilidade e operação distribuídas."
+  ],
+  "complexity": 9,
+  "scalability": 9
+}

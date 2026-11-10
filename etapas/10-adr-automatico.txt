@@ -1,0 +1,44 @@
+ETAPA 10 — GERAÇÃO E GESTÃO DE ADRs
+
+## Objetivo
+
+Especificar como preparar, revisar, versionar e exportar ADRs sem transformar
+recomendação em decisão. O ADR deriva exclusivamente de decisão humana
+registrada, dados conhecidos e fontes versionadas. Não usar IA em runtime,
+modelos generativos, OpenAI ou Azure OpenAI.
+
+## Referência normativa
+
+- [adr-generation.md](../docs/adr-generation.md): conteúdo, fluxo, ciclo de
+  vida, proveniência, exportação, trade-offs, exemplos e aceite.
+- [adr.schema.json](../schemas/adr.schema.json): contrato JSON do registro.
+- [adr-template.md](../templates/adr-template.md): projeção Markdown de
+  leitura/exportação.
+- [domain-model.md](../docs/domain-model.md): vínculo ADR/Decisão.
+- [application-experience.md](../docs/application-experience.md): papel da UI
+  e limites de camadas.
+
+## Revisão crítica
+
+- "Gerar automaticamente" significa preparar rascunho determinístico a partir
+  de fatos identificados, não decidir, criar justificativa ou inventar
+  consequências.
+- Campos sem fonte continuam vazios e explicitamente `NotProvided`.
+- JSON é o registro canônico; Markdown é exportação, não fonte concorrente.
+- Estado do documento ADR é independente do estado da decisão.
+- Alterações são versionadas e não sobrescrevem edição autoral silenciosamente.
+- Exemplos de Microservices, RabbitMQ, Kafka, Redis, Saga e Outbox são roteiros
+  de preenchimento, não recomendações universais.
+
+## Critérios de aceite
+
+1. A decisão de domínio existe e tem revisão antes de gerar ADR.
+2. Cada afirmação tem autoria e proveniência ou está marcada como não
+   fornecida.
+3. Gerar/aceitar ADR nunca aceita ou altera a decisão.
+4. Lacunas, erro de schema, referências inválidas e falha de gravação são
+   explícitos.
+5. Exportação representa o snapshot salvo e conserva referências de origem.
+6. Todos os exemplos e casos de teste obedecem aos limites acima.
+
+Esta etapa é de especificação. Não implementar gerador, UI ou persistência.

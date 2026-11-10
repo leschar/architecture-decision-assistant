@@ -1,0 +1,722 @@
+﻿@page "/"
+@rendermode InteractiveServer
+@using System.ComponentModel.DataAnnotations
+@using System.Globalization
+@using ArchitectureAssistant.Application.Analysis
+@using ArchitectureAssistant.Application.Projects
+@using ArchitectureAssistant.Domain.Analysis
+@using ArchitectureAssistant.Domain.Projects
+@using MediatR
+@inject ISender Sender
+
+<PageTitle>Projetos | Architecture Decision Assistant</PageTitle>
+
+<header class="workspace-header">
+    <div>
+        <p class="eyebrow">WORKSPACE LOCAL</p>
+        <h1>Decisões arquiteturais, com contexto.</h1>
+        <p class="lead">Registre requisitos e organize suas decisões sem perder a origem das informações.</p>
+    </div>
+</header>
+
+@if (_errors.Count > 0)
+{
+    <div class="alert alert-danger" role="alert">
+        <strong>Não foi possível concluir a operação.</strong>
+        <ul class="mb-0">
+            @foreach (var error in _errors)
+            {
+                <li>@error</li>
+            }
+        </ul>
+    </div>
+}
+
+@if (!string.IsNullOrWhiteSpace(_notice))
+{
+    <div class="alert alert-success" role="status">@_notice</div>
+}
+
+<div class="workspace-grid">
+    <section class="panel project-panel" aria-labelledby="projects-heading">
+        <div class="panel-heading">
+            <div>
+                <p class="eyebrow">SEUS PROJETOS</p>
+                <h2 id="projects-heading">Workspace</h2>
+            </div>
+            <span class="count-badge">@_projects.Count</span>
+        </div>
+
+        @if (_isLoading)
+        {
+            <p role="status">Carregando projetos…</p>
+        }
+        else if (_projects.Count == 0)
+        {
+            <p class="empty-state">Nenhum projeto salvo. Crie um para começar.</p>
+        }
+        else
+        {
+            <ul class="project-list">
+                @foreach (var project in _projects)
+                {
+                    <li>
+                        <button class="project-link @(_selectedProject?.Id == project.Id ? "active" : string.Empty)"
+                                @onclick="() => OpenProjectAsync(project.Id)"
+                                disabled="@_isBusy">
+                            <span class="project-link-title">@project.Name</span>
+                            <span class="project-link-meta">Revisão @project.Revision · @project.RequirementCount requisitos</span>
+                        </button>
+                    </li>
+                }
+            </ul>
+        }
+
+        <div class="create-project">
+            <h3>Novo projeto</h3>
+            <EditForm Model="_newProject" OnValidSubmit="CreateProjectAsync">
+                <DataAnnotationsValidator />
+                <div class="field">
+                    <label for="project-name">Nome</label>
+                    <InputText id="project-name" class="form-control" @bind-Value="_newProject.Name" />
+                    <ValidationMessage For="() => _newProject.Name" />
+                </div>
+                <div class="field">
+                    <label for="project-purpose">Objetivo</label>
+                    <InputTextArea id="project-purpose" class="form-control" rows="3" @bind-Value="_newProject.Purpose" />
+                    <ValidationMessage For="() => _newProject.Purpose" />
+                </div>
+                <button class="btn btn-primary" type="submit" disabled="@_isBusy">
+                    @(_isBusy ? "Salvando…" : "Criar projeto")
+                </button>
+            </EditForm>
+        </div>
+    </section>
+
+    <section class="panel detail-panel" aria-labelledby="detail-heading">
+        @if (_selectedProject is null)
+        {
+            <div class="empty-project">
+                <span class="empty-icon" aria-hidden="true">⌂</span>
+                <h2 id="detail-heading">Comece pelo contexto</h2>
+                <p>Crie um projeto ou abra um existente. Nenhuma arquitetura ou tecnologia será escolhida por padrão.</p>
+            </div>
+        }
+        else
+        {
+            <div class="panel-heading project-heading">
+                <div>
+                    <p class="eyebrow">PROJETO · REVISÃO @_selectedProject.Revision</p>
+                    <h2 id="detail-heading">@_selectedProject.Name</h2>
+                    <p class="project-purpose">@_selectedProject.Purpose</p>
+                </div>
+                <span class="save-state">Salvo</span>
+            </div>
+
+            <div class="section-heading">
+                <div>
+                    <p class="eyebrow">CONTEXTO DO SISTEMA</p>
+                    <h3>O que já é conhecido</h3>
+                </div>
+            </div>
+            <EditForm Model="_contextForm" OnValidSubmit="UpdateContextAsync">
+                <DataAnnotationsValidator />
+                <div class="form-row">
+                    <div class="field">
+                        <label for="business-domain">Domínio de negócio (opcional)</label>
+                        <InputText id="business-domain" class="form-control" @bind-Value="_contextForm.BusinessDomain" />
+                        <ValidationMessage For="() => _contextForm.BusinessDomain" />
+                    </div>
+                    <div class="field">
+                        <label for="team-size">Tamanho da equipe (opcional)</label>
+                        <InputNumber id="team-size" class="form-control" min="1" @bind-Value="_contextForm.TeamSize" />
+                        <ValidationMessage For="() => _contextForm.TeamSize" />
+                    </div>
+                    <div class="field">
+                        <label for="criticality">Criticidade (opcional)</label>
+                        <InputSelect id="criticality" class="form-select" @bind-Value="_contextForm.Criticality">
+                            <option value="">Não informada</option>
+                            <option value="@ProjectCriticality.Low">Baixa</option>
+                            <option value="@ProjectCriticality.Medium">Média</option>
+                            <option value="@ProjectCriticality.High">Alta</option>
+                            <option value="@ProjectCriticality.MissionCritical">Crítica</option>
+                        </InputSelect>
+                    </div>
+                    <div class="field">
+                        <label for="scalability-target">Meta de escala (opcional)</label>
+                        <InputSelect id="scalability-target" class="form-select" @bind-Value="_contextForm.ScalabilityTarget">
+                            <option value="">Não informada</option>
+                            <option value="@ScalabilityTarget.Low">Baixa</option>
+                            <option value="@ScalabilityTarget.Medium">Média</option>
+                            <option value="@ScalabilityTarget.High">Alta</option>
+                        </InputSelect>
+                    </div>
+                </div>
+                <div class="field">
+                    <label for="project-constraints">Restrições conhecidas (uma por linha)</label>
+                    <InputTextArea id="project-constraints" class="form-control" rows="2" @bind-Value="_contextForm.Constraints" />
+                    <ValidationMessage For="() => _contextForm.Constraints" />
+                </div>
+                <button class="btn btn-outline-primary" type="submit" disabled="@_isBusy">Salvar contexto</button>
+            </EditForm>
+
+            <div class="section-heading">
+                <div>
+                    <p class="eyebrow">ENTRADAS EXPLÍCITAS</p>
+                    <h3>Requisitos</h3>
+                </div>
+                <span class="count-badge">@_selectedProject.Requirements.Count</span>
+            </div>
+
+            @if (_selectedProject.Requirements.Count == 0)
+            {
+                <p class="empty-state">Ainda não há requisitos. Registre necessidades confirmadas ou restrições do projeto.</p>
+            }
+            else
+            {
+                <ul class="requirement-list">
+                    @foreach (var requirement in _selectedProject.Requirements)
+                    {
+                        <li>
+                            <span class="requirement-kind">@RequirementLabel(requirement.Classification)</span>
+                            <span class="requirement-text">@requirement.Description</span>
+                            <span class="requirement-meta">
+                                @requirement.Status
+                                @if (requirement.Priority is not null)
+                                {
+                                    <span> · @requirement.Priority</span>
+                                }
+                            </span>
+                        </li>
+                    }
+                </ul>
+            }
+
+            <div class="create-project requirement-form">
+                <h3>Adicionar requisito</h3>
+                <EditForm Model="_newRequirement" OnValidSubmit="AddRequirementAsync">
+                    <DataAnnotationsValidator />
+                    <div class="field">
+                        <label for="requirement-description">Descrição</label>
+                        <InputTextArea id="requirement-description" class="form-control" rows="3" @bind-Value="_newRequirement.Description" />
+                        <ValidationMessage For="() => _newRequirement.Description" />
+                    </div>
+                    <div class="form-row">
+                        <div class="field">
+                            <label for="requirement-classification">Classificação</label>
+                            <InputSelect id="requirement-classification" class="form-select" @bind-Value="_newRequirement.Classification">
+                                <option value="@RequirementClassification.Functional">Funcional</option>
+                                <option value="@RequirementClassification.Quality">Qualidade</option>
+                                <option value="@RequirementClassification.Constraint">Restrição</option>
+                            </InputSelect>
+                        </div>
+                        <div class="field">
+                            <label for="requirement-priority">Prioridade (opcional)</label>
+                            <InputSelect id="requirement-priority" class="form-select" @bind-Value="_newRequirement.Priority">
+                                <option value="">Não informada</option>
+                                <option value="@RequirementPriority.Must">Must</option>
+                                <option value="@RequirementPriority.Should">Should</option>
+                                <option value="@RequirementPriority.Could">Could</option>
+                            </InputSelect>
+                        </div>
+                    </div>
+                    <button class="btn btn-primary" type="submit" disabled="@_isBusy">
+                        @(_isBusy ? "Salvando…" : "Adicionar requisito")
+                    </button>
+                </EditForm>
+            </div>
+
+            <section class="section-heading analysis-section" aria-labelledby="analysis-heading">
+                <div>
+                    <p class="eyebrow">ANÁLISE DETERMINÍSTICA · FASE 1</p>
+                    <h3 id="analysis-heading">Candidatos e evidências</h3>
+                </div>
+            </section>
+            <p>
+                A análise apresenta evidências disponíveis; não escolhe nem registra uma decisão por você.
+                A adequação é uma escala relativa de 0 a 100, não uma probabilidade.
+            </p>
+            <button class="btn btn-primary"
+                    type="button"
+                    @onclick="AnalyzeProjectAsync"
+                    disabled="@_isBusy">
+                @(_isBusy ? "Analisando…" : "Executar análise básica")
+            </button>
+
+            @if (_analysisHistory.Count == 0)
+            {
+                <p class="empty-state">Ainda não há snapshots de análise para este projeto.</p>
+            }
+            else
+            {
+                @foreach (var historyItem in _analysisHistory)
+                {
+                    <article class="analysis-snapshot">
+                        <div class="panel-heading">
+                            <h4>Análise de @historyItem.Snapshot.CreatedAt.ToLocalTime().ToString("g", CultureInfo.CurrentCulture)</h4>
+                            @if (historyItem.IsOutdated)
+                            {
+                                <span class="badge text-bg-warning">
+                                    Desatualizada:
+                                    @string.Join(", ", historyItem.StalenessReasons.Select(StalenessReasonLabel))
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="badge text-bg-success">Atual</span>
+                            }
+                        </div>
+                        <p>
+                            Revisão do Projeto: @historyItem.Snapshot.ProjectRevision ·
+                            Projeto <code>@historyItem.Snapshot.ProjectHash</code> ·
+                            catálogo <code>@historyItem.Snapshot.CatalogHash</code>
+                        </p>
+
+                        @foreach (var group in historyItem.Snapshot.CandidateGroups)
+                        {
+                            <section aria-label="Candidatos do tipo @group.Kind">
+                                <h5>@group.Kind</h5>
+                                @if (group.Candidates.Count == 0)
+                                {
+                                    <p class="empty-state">Nenhum candidato deste tipo no catálogo.</p>
+                                }
+                                else
+                                {
+                                    @foreach (var candidate in group.Candidates)
+                                    {
+                                        <article class="analysis-candidate">
+                                            <h6>@candidate.CandidateName <small>v@candidate.CandidateVersion</small></h6>
+                                            @if (!string.IsNullOrWhiteSpace(candidate.CandidateSource))
+                                            {
+                                                <p>Fonte editorial: @candidate.CandidateSource</p>
+                                            }
+                                            <p>@candidate.CandidateDescription</p>
+                                            <p>
+                                                Elegibilidade: @EligibilityLabel(candidate.Eligibility) ·
+                                                Adequação: @FitScoreLabel(candidate.FitScore) ·
+                                                Cobertura:
+                                                @(candidate.EvidenceCoverage?.ToString("P0", CultureInfo.CurrentCulture) ?? "Sem evidência suficiente")
+                                            </p>
+
+                                            @if (candidate.Benefits.Count > 0)
+                                            {
+                                                <p><strong>Benefícios catalogados:</strong> @string.Join(" ", candidate.Benefits)</p>
+                                            }
+                                            @if (candidate.Limitations.Count > 0)
+                                            {
+                                                <p><strong>Limitações catalogadas:</strong> @string.Join(" ", candidate.Limitations)</p>
+                                            }
+
+                                            @foreach (var evaluation in candidate.RuleEvaluations)
+                                            {
+                                                <div class="analysis-evidence">
+                                                    <strong>@evaluation.RuleName (@evaluation.RuleId) v@evaluation.RuleVersion</strong>
+                                                    <span> · @ConditionLabel(evaluation.ConditionResult) · @evaluation.Applicability</span>
+                                                    <p>Arquivo/origem do conhecimento: @evaluation.KnowledgeSource</p>
+                                                    @if (!string.IsNullOrWhiteSpace(evaluation.Source))
+                                                    {
+                                                        <p>Fonte editorial da regra: @evaluation.Source</p>
+                                                    }
+                                                    <p>Hash da regra: <code>@evaluation.RuleContentHash</code></p>
+                                                    @foreach (var fact in evaluation.FactEvidence)
+                                                    {
+                                                        <p>
+                                                            Evidência de @(string.IsNullOrWhiteSpace(fact.Phase) ? "Condition" : fact.Phase): @fact.Fact =
+                                                            @(fact.Value ?? "Unknown") (@fact.Status)
+                                                            @if (fact.Operator is not null && fact.ExpectedValue is not null)
+                                                            {
+                                                                <span> · Critério: @fact.Fact @fact.Operator @fact.ExpectedValue</span>
+                                                            }
+                                                        </p>
+                                                    }
+                                                    @foreach (var effect in evaluation.Effects)
+                                                    {
+                                                        <p>
+                                                            Efeito @effect.Type —
+                                                            @(candidate.SchemaVersion == "1.0"
+                                                                ? "estado não registrado"
+                                                                : effect.Applied ? "aplicado" : "não aplicado"):
+                                                            @if (effect.Type == "Score")
+                                                            {
+                                                                <span>@effect.Points pontos × peso @effect.Weight. </span>
+                                                            }
+                                                            else if (effect.Type == "Flag")
+                                                            {
+                                                                <span>Severidade @effect.Severity. </span>
+                                                            }
+                                                            else if (effect.Type == "Exclude" && effect.HardConstraint)
+                                                            {
+                                                                <span>Restrição rígida. </span>
+                                                            }
+                                                            @effect.Rationale
+                                                        </p>
+                                                    }
+                                                </div>
+                                            }
+
+                                            @if (candidate.Warnings.Count > 0)
+                                            {
+                                                <ul class="text-warning-emphasis">
+                                                    @foreach (var warning in candidate.Warnings)
+                                                    {
+                                                        <li>@warning</li>
+                                                    }
+                                                </ul>
+                                            }
+                                        </article>
+                                    }
+                                }
+                            </section>
+                        }
+
+                        <details>
+                            <summary>Limitações e versões desta análise</summary>
+                            <p>Avaliador @historyItem.Snapshot.EvaluatorVersion · regras <code>@historyItem.Snapshot.RuleSetHash</code></p>
+                            <ul>
+                                @foreach (var limitation in historyItem.Snapshot.Limitations)
+                                {
+                                    <li>@limitation</li>
+                                }
+                            </ul>
+                        </details>
+                    </article>
+                }
+            }
+        }
+    </section>
+</div>
+
+@if (_selectedProject is not null)
+{
+    <DecisionManagementPanel Project="_selectedProject"
+                             Analyses="_analysisHistory"
+                             OnProjectChanged="OnDecisionProjectChangedAsync" />
+    <ArchitecturalStructurePanel Project="_selectedProject"
+                                 OnProjectChanged="OnDecisionProjectChangedAsync" />
+    <ArchitecturalDiagramPanel Project="_selectedProject" />
+    <AdrManagementPanel Project="_selectedProject" />
+    <HistoryManagementPanel Project="_selectedProject"
+                            OnProjectChanged="OnDecisionProjectChangedAsync" />
+}
+
+<KnowledgeCatalogPanel />
+
+@code {
+    private readonly List<ProjectListItem> _projects = [];
+    private readonly List<string> _errors = [];
+    private readonly List<AnalysisHistoryItem> _analysisHistory = [];
+    private readonly CreateProjectInput _newProject = new();
+    private readonly AddRequirementInput _newRequirement = new();
+    private readonly ProjectContextInput _contextForm = new();
+    private ProjectView? _selectedProject;
+    private bool _isLoading = true;
+    private bool _isBusy;
+    private string? _notice;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await ReloadProjectsAsync();
+        _isLoading = false;
+    }
+
+    private async Task ReloadProjectsAsync()
+    {
+        var result = await Sender.Send(new ListProjectsQuery());
+        if (!result.TryGetValue(out var projects))
+        {
+            ShowErrors(result.Errors.Select(error => error.Message));
+            return;
+        }
+
+        _projects.Clear();
+        _projects.AddRange(projects);
+        _errors.Clear();
+    }
+
+    private async Task CreateProjectAsync()
+    {
+        _isBusy = true;
+        _notice = null;
+        _errors.Clear();
+        try
+        {
+            var result = await Sender.Send(new CreateProjectCommand(_newProject.Name, _newProject.Purpose));
+            if (!result.TryGetValue(out var project))
+            {
+                ShowErrors(result.Errors.Select(error => error.Message));
+                return;
+            }
+
+            _selectedProject = project;
+            _contextForm.Load(project);
+            _newProject.Reset();
+            _notice = "Projeto criado e salvo no workspace local.";
+            await ReloadProjectsAsync();
+            await ReloadAnalysisHistoryAsync();
+        }
+        finally
+        {
+            _isBusy = false;
+        }
+    }
+
+    private async Task OpenProjectAsync(Guid projectId)
+    {
+        _isBusy = true;
+        _notice = null;
+        _errors.Clear();
+        try
+        {
+            var result = await Sender.Send(new GetProjectQuery(projectId));
+            if (!result.TryGetValue(out var project))
+            {
+                ShowErrors(result.Errors.Select(error => error.Message));
+                return;
+            }
+
+            _selectedProject = project;
+            _contextForm.Load(project);
+            await ReloadAnalysisHistoryAsync();
+        }
+        finally
+        {
+            _isBusy = false;
+        }
+    }
+
+    private async Task AddRequirementAsync()
+    {
+        if (_selectedProject is null)
+        {
+            return;
+        }
+
+        _isBusy = true;
+        _notice = null;
+        _errors.Clear();
+        try
+        {
+            var result = await Sender.Send(new AddRequirementCommand(
+                _selectedProject.Id,
+                _newRequirement.Description,
+                _newRequirement.Classification,
+                _newRequirement.Priority));
+            if (!result.TryGetValue(out var project))
+            {
+                ShowErrors(result.Errors.Select(error => error.Message));
+                return;
+            }
+
+            _selectedProject = project;
+            _contextForm.Load(project);
+            _newRequirement.Reset();
+            _notice = "Requisito confirmado e salvo.";
+            await ReloadProjectsAsync();
+            await ReloadAnalysisHistoryAsync();
+        }
+        finally
+        {
+            _isBusy = false;
+        }
+    }
+
+    private void ShowErrors(IEnumerable<string> messages)
+    {
+        _errors.Clear();
+        _errors.AddRange(messages);
+    }
+
+    private async Task ReloadAnalysisHistoryAsync()
+    {
+        _analysisHistory.Clear();
+        if (_selectedProject is null)
+        {
+            return;
+        }
+
+        var result = await Sender.Send(new GetProjectAnalysesQuery(_selectedProject.Id));
+        if (!result.TryGetValue(out var history))
+        {
+            ShowErrors(result.Errors.Select(error => error.Message));
+            return;
+        }
+
+        _analysisHistory.Clear();
+        _analysisHistory.AddRange(history);
+    }
+
+    private async Task AnalyzeProjectAsync()
+    {
+        if (_selectedProject is null)
+        {
+            return;
+        }
+
+        _isBusy = true;
+        _notice = null;
+        _errors.Clear();
+        try
+        {
+            var result = await Sender.Send(new AnalyzeProjectCommand(_selectedProject.Id));
+            if (!result.TryGetValue(out _))
+            {
+                ShowErrors(result.Errors.Select(error => error.Message));
+                return;
+            }
+
+            _notice = "Snapshot de análise salvo. A escolha continua sendo sua.";
+            await ReloadAnalysisHistoryAsync();
+        }
+        finally
+        {
+            _isBusy = false;
+        }
+    }
+
+    private async Task UpdateContextAsync()
+    {
+        if (_selectedProject is null)
+        {
+            return;
+        }
+
+        _isBusy = true;
+        _notice = null;
+        _errors.Clear();
+        try
+        {
+            var result = await Sender.Send(new UpdateProjectContextCommand(
+                _selectedProject.Id,
+                _contextForm.BusinessDomain,
+                _contextForm.TeamSize,
+                _contextForm.Criticality,
+                _contextForm.Constraints,
+                _contextForm.ScalabilityTarget));
+            if (!result.TryGetValue(out var project))
+            {
+                ShowErrors(result.Errors.Select(error => error.Message));
+                return;
+            }
+
+            _selectedProject = project;
+            _contextForm.Load(project);
+            _notice = "Contexto salvo.";
+            await ReloadProjectsAsync();
+            await ReloadAnalysisHistoryAsync();
+        }
+        finally
+        {
+            _isBusy = false;
+        }
+    }
+
+    private async Task OnDecisionProjectChangedAsync(ProjectView project)
+    {
+        _selectedProject = project;
+        _contextForm.Load(project);
+        await ReloadProjectsAsync();
+        await ReloadAnalysisHistoryAsync();
+    }
+
+    private static string RequirementLabel(RequirementClassification classification) =>
+        classification switch
+        {
+            RequirementClassification.Functional => "Funcional",
+            RequirementClassification.Quality => "Qualidade",
+            RequirementClassification.Constraint => "Restrição",
+            _ => "Não classificado"
+        };
+
+    private static string EligibilityLabel(AnalysisEligibility eligibility) =>
+        eligibility switch
+        {
+            AnalysisEligibility.Eligible => "Elegível",
+            AnalysisEligibility.Excluded => "Excluído",
+            _ => "Não avaliada (restrições fora do escopo)"
+        };
+
+    private static string StalenessReasonLabel(AnalysisStalenessReason reason) =>
+        reason switch
+        {
+            AnalysisStalenessReason.ProjectRevisionChanged => "revisão do Projeto",
+            AnalysisStalenessReason.ProjectContentChanged => "conteúdo do Projeto",
+            AnalysisStalenessReason.CatalogChanged => "catálogo",
+            AnalysisStalenessReason.RuleSetChanged => "conjunto de regras",
+            AnalysisStalenessReason.EvaluatorVersionChanged => "versão do avaliador",
+            _ => "origem alterada"
+        };
+
+    private static string ConditionLabel(RuleConditionResult result) =>
+        result switch
+        {
+            RuleConditionResult.Matched => "Correspondente",
+            RuleConditionResult.NotMatched => "Não correspondente",
+            RuleConditionResult.Unknown => "Desconhecido",
+            _ => "Não avaliado"
+        };
+
+    private static string FitScoreLabel(decimal? score) =>
+        score.HasValue
+            ? $"{score.Value.ToString("0.##", CultureInfo.InvariantCulture)} / 100"
+            : "Não avaliada";
+
+    private sealed class CreateProjectInput
+    {
+        [Required(ErrorMessage = "Informe o nome do projeto.")]
+        [StringLength(120, ErrorMessage = "Use até 120 caracteres.")]
+        public string Name { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Informe o objetivo do projeto.")]
+        [StringLength(2000, ErrorMessage = "Use até 2000 caracteres.")]
+        public string Purpose { get; set; } = string.Empty;
+
+        public void Reset()
+        {
+            Name = string.Empty;
+            Purpose = string.Empty;
+        }
+    }
+
+    private sealed class AddRequirementInput
+    {
+        [Required(ErrorMessage = "Descreva o requisito.")]
+        [StringLength(2000, ErrorMessage = "Use até 2000 caracteres.")]
+        public string Description { get; set; } = string.Empty;
+
+        public RequirementClassification Classification { get; set; } = RequirementClassification.Quality;
+
+        public RequirementPriority? Priority { get; set; }
+
+        public void Reset()
+        {
+            Description = string.Empty;
+            Classification = RequirementClassification.Quality;
+            Priority = null;
+        }
+    }
+
+    private sealed class ProjectContextInput
+    {
+        [StringLength(120, ErrorMessage = "Use até 120 caracteres.")]
+        public string? BusinessDomain { get; set; }
+
+        [Range(1, int.MaxValue, ErrorMessage = "A equipe deve ter ao menos uma pessoa.")]
+        public int? TeamSize { get; set; }
+
+        public ProjectCriticality? Criticality { get; set; }
+
+        public ScalabilityTarget? ScalabilityTarget { get; set; }
+
+        [StringLength(5000, ErrorMessage = "O texto das restrições excede o limite.")]
+        public string Constraints { get; set; } = string.Empty;
+
+        public void Load(ProjectView project)
+        {
+            BusinessDomain = project.BusinessDomain;
+            TeamSize = project.TeamSize;
+            Criticality = project.Criticality;
+            ScalabilityTarget = project.ScalabilityTarget;
+            Constraints = string.Join(Environment.NewLine, project.Constraints);
+        }
+    }
+}

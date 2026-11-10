@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Architectural history similarity policy",
+  "description": "Versioned deterministic comparison policy. It does not encode scripts or recommendations.",
+  "type": "object",
+  "required": ["schemaVersion", "policyId", "version", "dimensions", "minimumCoverage"],
+  "properties": {
+    "schemaVersion": { "const": "1.0" },
+    "policyId": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+    },
+    "version": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$" },
+    "minimumCoverage": { "type": "number", "exclusiveMinimum": 0, "maximum": 1 },
+    "dimensions": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/dimension" }
+    }
+  },
+  "$defs": {
+    "dimension": {
+      "type": "object",
+      "required": ["id", "featurePath", "weight", "comparison"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+        "featurePath": {
+          "type": "string",
+          "pattern": "^project\\.[A-Za-z0-9._-]+$"
+        },
+        "weight": { "type": "number", "exclusiveMinimum": 0 },
+        "comparison": {
+          "type": "string",
+          "enum": ["Exact", "NumericLinear", "SetJaccard"]
+        },
+        "normalizationMinimum": { "type": "number" },
+        "normalizationMaximum": { "type": "number" }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": { "comparison": { "const": "NumericLinear" } },
+            "required": ["comparison"]
+          },
+          "then": {
+            "required": ["normalizationMinimum", "normalizationMaximum"],
+            "properties": {
+              "normalizationMinimum": { "type": "number" },
+              "normalizationMaximum": { "type": "number" }
+            }
+          },
+          "else": {
+            "not": {
+              "anyOf": [
+                { "required": ["normalizationMinimum"] },
+                { "required": ["normalizationMaximum"] }
+              ]
+            }
+          }
+        }
+      ],
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

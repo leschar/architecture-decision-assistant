@@ -1,0 +1,197 @@
+{
+  "schemaVersion": "1.0",
+  "vocabularyId": "requirement-lexicon-pt-br",
+  "version": "0.1.0",
+  "locale": "pt-BR",
+  "normalization": {
+    "policyVersion": "1.0.0",
+    "unicodeForm": "NFC",
+    "caseFolding": "InvariantLowercase",
+    "diacriticFolding": "RemoveMarksForMatchingOnly",
+    "tokenization": "UnicodeWordBoundaries",
+    "stemming": "Disabled",
+    "offsetUnit": "Utf16CodeUnits"
+  },
+  "taxonomy": [
+    {
+      "id": "business",
+      "label": "Negócio",
+      "description": "Contexto e capacidades de negócio."
+    },
+    {
+      "id": "business.sales",
+      "label": "Vendas",
+      "description": "Capacidade ou domínio de vendas.",
+      "parentId": "business"
+    },
+    {
+      "id": "business.financial-institution",
+      "label": "Instituição financeira",
+      "description": "Instituição que presta serviços financeiros.",
+      "parentId": "business"
+    },
+    {
+      "id": "integration",
+      "label": "Integração",
+      "description": "Interação com sistemas externos."
+    },
+    {
+      "id": "integration.external-system",
+      "label": "Sistema externo",
+      "description": "Integração explicitamente solicitada com sistema externo.",
+      "parentId": "integration"
+    },
+    {
+      "id": "integration.erp",
+      "label": "ERP",
+      "description": "ERP explicitamente mencionado como sistema integrado.",
+      "parentId": "integration"
+    },
+    {
+      "id": "quality",
+      "label": "Qualidade",
+      "description": "Atributos de qualidade do sistema."
+    },
+    {
+      "id": "quality.scalability",
+      "label": "Escalabilidade",
+      "description": "Necessidade explícita de capacidade ou escala.",
+      "parentId": "quality"
+    },
+    {
+      "id": "quality.concurrency",
+      "label": "Concorrência",
+      "description": "Execução simultânea explicitamente mencionada.",
+      "parentId": "quality"
+    },
+    {
+      "id": "quality.availability",
+      "label": "Disponibilidade",
+      "description": "Continuidade ou disponibilidade explicitamente mencionada.",
+      "parentId": "quality"
+    },
+    {
+      "id": "quality.performance",
+      "label": "Desempenho",
+      "description": "Desempenho ou latência explicitamente mencionados.",
+      "parentId": "quality"
+    },
+    {
+      "id": "data",
+      "label": "Dados",
+      "description": "Conceitos de persistência e armazenamento."
+    },
+    {
+      "id": "data.storage",
+      "label": "Armazenamento de dados",
+      "description": "Necessidade de armazenamento de dados a esclarecer.",
+      "parentId": "data"
+    },
+    {
+      "id": "requirement",
+      "label": "Requisito",
+      "description": "Classificação de requisito ainda a confirmar."
+    },
+    {
+      "id": "requirement.functional",
+      "label": "Funcional",
+      "description": "Comportamento funcional a confirmar.",
+      "parentId": "requirement"
+    }
+  ],
+  "entries": [
+    {
+      "id": "online-sales",
+      "canonicalForm": "vendas online",
+      "forms": [
+        { "text": "vendas online", "kind": "Canonical" },
+        { "text": "sistema de vendas online", "kind": "Synonym" }
+      ],
+      "tagIds": ["business.sales", "requirement.functional"],
+      "matchMode": "ExactTokenSequence"
+    },
+    {
+      "id": "external-integration",
+      "canonicalForm": "integração com sistema externo",
+      "forms": [
+        {
+          "text": "integração com sistema externo",
+          "kind": "Canonical"
+        },
+        { "text": "integração com erp", "kind": "Synonym" },
+        { "text": "integrar com sistema externo", "kind": "Synonym" }
+      ],
+      "tagIds": ["integration.external-system"],
+      "matchMode": "ExactTokenSequence"
+    },
+    {
+      "id": "erp",
+      "canonicalForm": "erp",
+      "forms": [
+        { "text": "erp", "kind": "Canonical" },
+        { "text": "sistema erp", "kind": "Synonym" }
+      ],
+      "tagIds": ["integration.erp"],
+      "matchMode": "ExactTokenSequence"
+    },
+    {
+      "id": "scalability",
+      "canonicalForm": "escalabilidade",
+      "forms": [
+        { "text": "escalabilidade", "kind": "Canonical" },
+        { "text": "milhares de pedidos simultâneos", "kind": "Synonym" }
+      ],
+      "tagIds": ["quality.scalability"],
+      "matchMode": "ExactTokenSequence"
+    },
+    {
+      "id": "concurrency",
+      "canonicalForm": "simultâneo",
+      "forms": [
+        { "text": "simultâneo", "kind": "Canonical" },
+        { "text": "simultânea", "kind": "SpellingVariant" },
+        { "text": "concorrente", "kind": "Synonym" }
+      ],
+      "tagIds": ["quality.concurrency"],
+      "matchMode": "ExactTokenSequence"
+    },
+    {
+      "id": "availability",
+      "canonicalForm": "disponibilidade",
+      "forms": [
+        { "text": "disponibilidade", "kind": "Canonical" },
+        { "text": "alta disponibilidade", "kind": "Synonym" },
+        { "text": "disponível", "kind": "Synonym" }
+      ],
+      "tagIds": ["quality.availability"],
+      "matchMode": "ExactTokenSequence"
+    },
+    {
+      "id": "bank-financial",
+      "canonicalForm": "banco",
+      "forms": [{ "text": "banco", "kind": "Canonical" }],
+      "tagIds": ["business.financial-institution"],
+      "matchMode": "ExactTokenSequence",
+      "ambiguityGroup": "meaning-bank",
+      "clarificationQuestion": "Você se refere a uma instituição financeira ou a um sistema de armazenamento de dados?"
+    },
+    {
+      "id": "bank-data-store",
+      "canonicalForm": "banco",
+      "forms": [{ "text": "banco", "kind": "Canonical" }],
+      "tagIds": ["data.storage"],
+      "matchMode": "ExactTokenSequence",
+      "ambiguityGroup": "meaning-bank",
+      "clarificationQuestion": "Você se refere a uma instituição financeira ou a um sistema de armazenamento de dados?"
+    }
+  ],
+  "negation": {
+    "cues": ["não", "nunca", "sem"],
+    "clauseBoundaries": [".", ";", "?", "!", "mas", "porém"],
+    "exceptions": ["não só", "não apenas"],
+    "maxTokenDistance": 4
+  },
+  "conflicts": [],
+  "source": "Vocabulário ilustrativo para validar o contrato; revisar antes de uso.",
+  "updatedAt": "2026-11-09T00:00:00Z"
+}

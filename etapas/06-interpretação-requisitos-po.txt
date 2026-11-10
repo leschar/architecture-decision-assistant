@@ -1,0 +1,89 @@
+ETAPA 06 — INTERPRETAÇÃO DETERMINÍSTICA DE REQUISITOS ESCRITOS POR PRODUCT OWNERS
+
+## Objetivo
+
+Especificar uma capacidade lexical assistida que transforme texto livre em
+hipóteses estruturadas, explicáveis e revisáveis. O sistema não confirma
+requisitos por encontrar palavras e não substitui a elicitação humana.
+
+## Restrições obrigatórias
+
+- Não usar IA em runtime, modelos generativos, OpenAI, Azure OpenAI, treinamento
+  ou serviços externos de inferência.
+- Basear a interpretação em regras lexicais explícitas e vocabulário JSON
+  versionado, carregável sem recompilação dentro do contrato suportado.
+- Não executar scripts, expressões ou código contido no JSON.
+- Manter lógica de negócio na Application/Domain; a UI apenas apresenta
+  evidências e coleta revisão.
+- Só fatos confirmados pelo usuário podem alimentar o motor de regras.
+
+## Escopo da especificação
+
+1. Normalização determinística em português, preservando o texto original,
+   offsets em UTF-16, acentuação para exibição e versão da política. Não aplicar
+   stemming, lematização, fuzzy matching ou correção silenciosa.
+2. Correspondência por tokens e expressões compostas, com regras explícitas de
+   limites, sobreposição e colisões.
+3. Taxonomia hierárquica pequena, com IDs estáveis e tags que representam
+   conceitos de requisito, não recomendações tecnológicas.
+4. Formas canônicas, sinônimos, abreviações e variantes explícitas por locale;
+   polissemia representada como ambiguidade, nunca resolvida por ordem ou peso.
+5. Escopo conservador de negação, tratamento de exceções, perguntas, hipóteses
+   e dupla negação.
+6. Detecção apenas de conflitos declarados editorialmente ou de evidências
+   afirmativas/negativas sobre o mesmo conceito; não deduzir conflito por
+   coocorrência.
+7. Evidência por ocorrência (trecho, offsets, forma, entrada, tag, polaridade,
+   versão e regra aplicada), proveniência e ciclo de confirmação/rejeição.
+8. Conversão em Requirement do domínio só após confirmação explícita, mantendo
+   descrição, classificação, prioridade conhecida, origem UserProvided e
+   proveniência da interpretação. Não inventar números, unidades, cenários,
+   prazos ou prioridade a partir de termos vagos.
+9. Integração ao motor de regras apenas por fatos tipados confirmados. Hipóteses
+   pendentes/ambíguas/negadas/rejeitadas não são fatos positivos; ausências
+   permanecem Unknown.
+10. Schemas JSON para conhecimento lexical e resultado de interpretação,
+    incluindo validação estrutural e verificações semânticas de referências,
+    IDs, ciclos e colisões.
+
+## Volumes e evolução do vocabulário
+
+Não adotar mínimos de 500 palavras-chave, 500 sinônimos ou 100 categorias.
+Quotas desse tipo tendem a criar conteúdo artificial, duplicado e
+semanticamente impreciso; quantidade não comprova cobertura nem precisão.
+Começar por conceitos com uso claro no modelo de domínio e nas regras. Uma
+expressão nova só entra após revisão de sentido, exemplos positivos e
+negativos, colisões, tag canônica, pergunta de esclarecimento quando necessária
+e teste de regressão.
+
+Expandir a partir de lacunas observadas, falsos positivos/falsos negativos e
+feedback revisado. Versionar o conteúdo e medir por tag antes de afirmar
+qualidade; não exibir probabilidade ou “confiança” sem calibração empírica.
+
+## Artefatos de referência
+
+- `docs/requirement-text-interpretation.md`: comportamento, modelo, exemplos,
+  avaliação e critérios de aceite.
+- `schemas/lexical-knowledge.schema.json`: contrato do vocabulário.
+- `schemas/requirement-interpretation.schema.json`: contrato do resultado e
+  proveniência.
+- `schemas/lexical-knowledge.pt-BR.json`: amostra mínima de conteúdo, não uma
+  base de produção nem meta de cobertura.
+- `docs/domain-model.md`, `docs/knowledge-model.md` e `docs/rule-engine.md`:
+  alinhamento com Requirement, catálogo e fatos avaliáveis.
+
+## Avaliação e aceite
+
+Manter corpus revisado com spans/tags/polaridade esperados, exemplos positivos
+e negativos, polissemia, negação, conflitos, formas compostas, variações de
+acentuação, texto sem cobertura e domínios diferentes. Reportar precisão,
+recall, falsos positivos e falsos negativos por tag, suporte e baseline; definir
+limiares somente após avaliação inicial e revisão de risco.
+
+Aceitar a especificação quando: menções, hipóteses, polaridades, ordem e offsets
+forem determinísticos e rastreáveis (metadados de execução podem variar);
+negação e ambiguidades não forem convertidas em fatos afirmativos; confirmação
+humana for requisito para alimentar regras; JSON válido puder estender o
+conteúdo sem recompilação; erros de conteúdo forem explícitos; e os exemplos e
+critérios de avaliação documentados forem cobertos por testes futuros. Esta
+etapa é apenas modelagem: não implementar aplicação ou mecanismo de runtime.

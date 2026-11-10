@@ -1,0 +1,489 @@
+@using ArchitectureAssistant.Application.History
+@using ArchitectureAssistant.Application.Projects
+@using ArchitectureAssistant.Domain.History
+@using MediatR
+@inject ISender Sender
+
+<section class="panel" aria-labelledby="history-heading">
+    <div class="panel-heading">
+        <div>
+            <p class="eyebrow">FASES 5 · HISTÓRICO LOCAL</p>
+            <h2 id="history-heading">Projetos anteriores</h2>
+        </div>
+    </div>
+    <p>Arquivos locais opt-in. Comparação histórica não altera análise, ranking ou decisão deste projeto.</p>
+
+    @if (_errors.Count > 0)
+    {
+        <div class="alert alert-danger" role="alert">
+            <ul class="mb-0">
+                @foreach (var error in _errors)
+                {
+                    <li>@error</li>
+                }
+            </ul>
+        </div>
+    }
+
+    @if (_diagnostics.Count > 0)
+    {
+        <div class="alert alert-warning" role="status">
+            <ul class="mb-0">
+                @foreach (var diagnostic in _diagnostics)
+                {
+                    <li>@diagnostic.Message</li>
+                }
+            </ul>
+        </div>
+    }
+
+    <details class="history-archive">
+        <summary>Arquivar revisão atual — requer confirmação explícita</summary>
+        <p>Será copiada a revisão @Project.Revision de @Project.Name como snapshot imutável. Revise os dados locais antes de confirmar.</p>
+        <p>Objetivo: @Project.Purpose</p>
+        <p>
+            Domínio: @(Project.BusinessDomain ?? "Não informado") · equipe:
+            @(Project.TeamSize?.ToString() ?? "Não informada") · decisões: @Project.Decisions.Count ·
+            requisitos: @Project.Requirements.Count · elementos estruturais: @Project.StructuralElements.Count
+        </p>
+        @if (Project.Constraints.Count > 0)
+        {
+            <p>Restrições: @string.Join("; ", Project.Constraints)</p>
+        }
+        <div class="form-row">
+            <div class="field">
+                <label for="archive-confirmed-by">Confirmado por</label>
+                <InputText id="archive-confirmed-by" class="form-control" @bind-Value="_confirmedBy" />
+            </div>
+            <div class="field">
+                <label for="archive-note">Nota opcional</label>
+                <InputText id="archive-note" class="form-control" @bind-Value="_archiveNote" />
+            </div>
+        </div>
+        <div class="field">
+            <InputCheckbox id="archive-confirm" @bind-Value="_archiveConfirmed" />
+            <label for="archive-confirm">Confirmo que quero arquivar esta revisão no workspace local.</label>
+        </div>
+        <button class="btn btn-primary" type="button" disabled="@_isBusy" @onclick="ArchiveAsync">Arquivar snapshot JSON</button>
+    </details>
+
+    <div class="form-row">
+        <div class="field">
+            <label for="history-search">Buscar por nome, domínio ou ID (texto literal)</label>
+            <InputText id="history-search" class="form-control" @bind-Value="_searchText" />
+        </div>
+        <button class="btn btn-outline-primary" type="button" disabled="@_isBusy" @onclick="SearchAsync">Buscar e comparar com projeto atual</button>
+        <button class="btn btn-outline-primary" type="button" disabled="@_isBusy" @onclick="RebuildIndexAsync">Reconstruir índice</button>
+    </div>
+
+    @if (_statistics is not null)
+    {
+        <div class="history-statistics">
+            <h3>Prontidão da curadoria de similaridade</h3>
+            <p>
+                @_policyReadiness.VerifiedArchiveCount snapshots verificados ·
+                @_policyReadiness.TotalProjectPairs pares possíveis.
+                As métricas são agregadas; valores dos projetos não são exibidos.
+                Pesos e cobertura mínima continuam exigindo decisão curatorial explícita.
+            </p>
+            @if (_policyReadiness.VerifiedArchiveCount < 2)
+            {
+                <p>Ainda não há dois snapshots verificados para observar comparações entre projetos.</p>
+            }
+            <ul>
+                @foreach (var dimension in _policyReadiness.Dimensions)
+                {
+                    <li>
+                        @dimension.FeaturePath · @dimension.Comparison ·
+                        confirmados @dimension.ConfirmedCount/@dimension.ArchiveCount ·
+                        desconhecidos/incompatíveis @dimension.UnknownCount ·
+                        pares comparáveis @dimension.ComparableProjectPairs ·
+                        valores distintos @dimension.DistinctValueCount
+                        @if (dimension.ObservedMinimum is decimal minimum &&
+                             dimension.ObservedMaximum is decimal maximum)
+                        {
+                            <span> · faixa observada @minimum–@maximum (não define limites da política)</span>
+                        }
+                    </li>
+                }
+            </ul>
+            <h3>Estatísticas descritivas</h3>
+            <p>População filtrada: @_statistics.Population projetos. Domínio informado: @_statistics.ProjectsWithDomain/@_statistics.Population. Projetos com decisão Accepted: @_statistics.ProjectsWithAcceptedDecision/@_statistics.Population. Frequência não representa qualidade ou sucesso.</p>
+            <h4>Projetos por domínio declarado</h4>
+            @if (_statistics.ProjectsByDomain.Count == 0)
+            {
+                <p>Nenhum domínio declarado na população filtrada.</p>
+            }
+            else
+            {
+                <ul>
+                    @foreach (var item in _statistics.ProjectsByDomain)
+                    {
+                        <li>@item.Value: @item.Count/@_statistics.ProjectsWithDomain</li>
+                    }
+                </ul>
+            }
+            <h4>Alternativas registradas em decisões Accepted</h4>
+            @if (_statistics.AcceptedAlternatives.Count == 0)
+            {
+                <p>Nenhuma alternativa Accepted na população filtrada.</p>
+            }
+            else
+            {
+                <ul>
+                    @foreach (var item in _statistics.AcceptedAlternatives)
+                    {
+                        <li>@item.Value: @item.Count/@_statistics.ProjectsWithAcceptedDecision</li>
+                    }
+                </ul>
+            }
+        </div>
+    }
+
+    @if (_searchResult is not null)
+    {
+        <h3>Resultados locais (@_searchResult.Projects.Count)</h3>
+        @if (!_searchResult.SimilarityPolicyAvailable)
+        {
+            <p>Busca literal disponível; ranking por similaridade desabilitado porque não há uma política JSON válida configurada.</p>
+        }
+        @if (_searchResult.Projects.Count == 0)
+        {
+            <p>Nenhum projeto histórico corresponde aos filtros.</p>
+        }
+        else
+        {
+            <ul class="history-results">
+                @foreach (var item in _searchResult.Projects)
+                {
+                    <li @key="item.Record.ArchiveId">
+                        <h4>@ProjectName(item.Record) · revisão @item.Record.ProjectRevision</h4>
+                        <p>
+                            Arquivo @item.Record.ArchiveId · @item.Record.ArchivedAt.ToLocalTime():g ·
+                            fingerprint <code>@item.Record.ContentFingerprint</code>
+                        </p>
+                        @if (item.Comparison is not null)
+                        {
+                            <p>
+                                Comparação: @item.Comparison.Status ·
+                                similaridade @(item.Comparison.Similarity?.ToString("P1") ?? "não comparável") ·
+                                cobertura @item.Comparison.Coverage.ToString("P1") ·
+                                política @item.Comparison.PolicyId v@item.Comparison.PolicyVersion
+                            </p>
+                            <ul>
+                                @foreach (var dimension in item.Comparison.Dimensions)
+                                {
+                                    <li>
+                                        @dimension.FeaturePath · peso @dimension.Weight ·
+                                        @(dimension.Similarity?.ToString("P2") ?? "excluída") ·
+                                        @dimension.ExcludedReason
+                                    </li>
+                                }
+                            </ul>
+                        }
+                        @if (item.Record.DecisionReferences.Count > 0)
+                        {
+                            <ul>
+                                @foreach (var decision in item.Record.DecisionReferences)
+                                {
+                                    <li>
+                                        @decision.Title · decisão @decision.DecisionId · revisão @decision.DecisionRevision
+                                        <button class="btn btn-sm btn-outline-primary" type="button" disabled="@_isBusy" @onclick="() => ReuseDecisionAsync(item.Record.ArchiveId, decision.DecisionId)">
+                                            Reutilizar como proposta
+                                        </button>
+                                    </li>
+                                }
+                            </ul>
+                        }
+                        <button class="btn btn-outline-primary" type="button" disabled="@_isBusy" @onclick="() => InspectAsync(item.Record.ArchiveId)">
+                            Abrir snapshot e contexto
+                        </button>
+                        @if (_removeArchiveId == item.Record.ArchiveId)
+                        {
+                            <div class="field">
+                                <InputCheckbox id="@("remove-" + item.Record.ArchiveId)" @bind-Value="_removeConfirmed" />
+                                <label for="@("remove-" + item.Record.ArchiveId)">Confirmo remover o registro e seu snapshot imutável.</label>
+                            </div>
+                            <button class="btn btn-outline-danger" type="button" disabled="@_isBusy" @onclick="() => RemoveAsync(item.Record.ArchiveId)">Confirmar remoção</button>
+                        }
+                        else
+                        {
+                            <button class="btn btn-outline-danger" type="button" disabled="@_isBusy" @onclick="() => BeginRemove(item.Record.ArchiveId)">Remover…</button>
+                        }
+                    </li>
+                }
+            </ul>
+        }
+    }
+
+    @if (_inspectedProject is not null)
+    {
+        <details open>
+            <summary>Snapshot verificado: @_inspectedProject.Name, revisão @_inspectedProject.Revision</summary>
+            <p>@_inspectedProject.Purpose</p>
+            <p>Domínio: @(_inspectedProject.BusinessDomain ?? "Não informado") · Equipe: @(_inspectedProject.TeamSize?.ToString() ?? "Não informada")</p>
+            <h4>Decisões</h4>
+            <ul>
+                @foreach (var decision in _inspectedProject.Decisions)
+                {
+                    <li>@decision.SelectedAlternativeId · @decision.Status · justificação: @decision.Justification</li>
+                }
+            </ul>
+            <h4>Requisitos confirmados</h4>
+            <ul>
+                @foreach (var requirement in _inspectedProject.Requirements.Where(requirement => requirement.Status == RequirementStatus.Confirmed))
+                {
+                    <li>@requirement.Description</li>
+                }
+            </ul>
+            <h4>Restrições</h4>
+            @if (_inspectedProject.Constraints.Count == 0)
+            {
+                <p>Nenhuma restrição registrada.</p>
+            }
+            else
+            {
+                <ul>
+                    @foreach (var constraint in _inspectedProject.Constraints)
+                    {
+                        <li>@constraint</li>
+                    }
+                </ul>
+            }
+            <h4>Estrutura explícita</h4>
+            <ul>
+                @foreach (var element in _inspectedProject.StructuralElements)
+                {
+                    <li>@element.Name · @element.Type · @element.Status · @element.Id</li>
+                }
+            </ul>
+        </details>
+    }
+</section>
+
+@code {
+    private readonly List<string> _errors = [];
+    private IReadOnlyList<HistoryDiagnostic> _diagnostics = Array.Empty<HistoryDiagnostic>();
+    private HistorySearchResult? _searchResult;
+    private HistoryStatistics? _statistics;
+    private HistoryPolicyReadiness _policyReadiness = new(
+        0,
+        0,
+        Array.Empty<HistoryPolicyDimensionReadiness>(),
+        Array.Empty<HistoryDiagnostic>());
+    private ProjectView? _inspectedProject;
+    private string? _inspectedArchiveId;
+    private string _searchText = string.Empty;
+    private string _confirmedBy = string.Empty;
+    private string? _archiveNote;
+    private string? _removeArchiveId;
+    private bool _archiveConfirmed;
+    private bool _removeConfirmed;
+    private bool _isBusy;
+    private Guid? _lastProjectId;
+    private long _lastProjectRevision = -1;
+
+    [Parameter, EditorRequired]
+    public ProjectView Project { get; set; } = null!;
+
+    [Parameter]
+    public EventCallback<ProjectView> OnProjectChanged { get; set; }
+
+    protected override Task OnParametersSetAsync()
+    {
+        if (_lastProjectId != Project.Id || _lastProjectRevision != Project.Revision)
+        {
+            _lastProjectId = Project.Id;
+            _lastProjectRevision = Project.Revision;
+            return SearchAsync();
+        }
+
+        return Task.CompletedTask;
+    }
+
+    private async Task ArchiveAsync()
+    {
+        _errors.Clear();
+        _isBusy = true;
+        try
+        {
+            var result = await Sender.Send(new ArchiveProjectHistoryCommand(
+                Project.Id,
+                _archiveConfirmed,
+                _confirmedBy,
+                _archiveNote));
+            if (!result.TryGetValue(out var archived))
+            {
+                _errors.AddRange(result.Errors.Select(error => error.Message));
+                return;
+            }
+
+            _archiveConfirmed = false;
+            _archiveNote = null;
+            await SearchAsync();
+            _diagnostics = _diagnostics.Append(new HistoryDiagnostic(
+                "history.archive.completed",
+                $"Snapshot {_searchResult?.Projects.FirstOrDefault(item => item.Record.ArchiveId == archived.ArchiveId)?.Record.ArchiveId ?? archived.ArchiveId} arquivado; fingerprint {archived.ContentFingerprint}.")).ToArray();
+        }
+        finally
+        {
+            _isBusy = false;
+        }
+    }
+
+    private async Task SearchAsync()
+    {
+        _errors.Clear();
+        var result = await Sender.Send(new SearchHistoricalProjectsQuery(_searchText, Project.Id));
+        if (!result.TryGetValue(out var search))
+        {
+            _errors.AddRange(result.Errors.Select(error => error.Message));
+            return;
+        }
+
+        _searchResult = search;
+        _diagnostics = search.Diagnostics;
+        var stats = await Sender.Send(new GetHistoryStatisticsQuery(_searchText));
+        if (!stats.TryGetValue(out var statistics))
+        {
+            _errors.AddRange(stats.Errors.Select(error => error.Message));
+            _statistics = null;
+            return;
+        }
+
+        _statistics = statistics;
+        var readiness = await Sender.Send(new GetHistoryPolicyReadinessQuery());
+        if (!readiness.TryGetValue(out var policyReadiness))
+        {
+            _errors.AddRange(readiness.Errors.Select(error => error.Message));
+            _policyReadiness = new HistoryPolicyReadiness(
+                0,
+                0,
+                Array.Empty<HistoryPolicyDimensionReadiness>(),
+                Array.Empty<HistoryDiagnostic>());
+            return;
+        }
+
+        _policyReadiness = policyReadiness;
+    }
+
+    private async Task RebuildIndexAsync()
+    {
+        _errors.Clear();
+        _isBusy = true;
+        try
+        {
+            var result = await Sender.Send(new RebuildHistoryIndexCommand());
+            if (!result.TryGetValue(out var rebuilt))
+            {
+                _errors.AddRange(result.Errors.Select(error => error.Message));
+                return;
+            }
+
+            _diagnostics = rebuilt.Diagnostics;
+            await SearchAsync();
+            if (rebuilt.IndexRebuilt)
+            {
+                _diagnostics = _diagnostics.Append(new HistoryDiagnostic(
+                    "history.index.rebuilt",
+                    "Índice JSON reconstruído explicitamente a partir dos snapshots e registros verificados.")).ToArray();
+            }
+        }
+        finally
+        {
+            _isBusy = false;
+        }
+    }
+
+    private async Task InspectAsync(string archiveId)
+    {
+        _errors.Clear();
+        var result = await Sender.Send(new LoadHistoricalProjectQuery(archiveId));
+        if (!result.TryGetValue(out var project))
+        {
+            _errors.AddRange(result.Errors.Select(error => error.Message));
+            _inspectedProject = null;
+            _inspectedArchiveId = null;
+            return;
+        }
+
+        _inspectedProject = project;
+        _inspectedArchiveId = archiveId;
+    }
+
+    private async Task ReuseDecisionAsync(string archiveId, string decisionId)
+    {
+        if (_inspectedArchiveId != archiveId || _inspectedProject is null ||
+            !Guid.TryParse(decisionId, out var parsedDecisionId))
+        {
+            _errors.Add("Abra e confira o snapshot verificado antes de reutilizar uma decisão.");
+            return;
+        }
+
+        _errors.Clear();
+        _isBusy = true;
+        try
+        {
+            var result = await Sender.Send(new ReuseHistoricalDecisionCommand(
+                Project.Id,
+                archiveId,
+                parsedDecisionId,
+                _confirmedBy));
+            if (!result.TryGetValue(out var updated))
+            {
+                _errors.AddRange(result.Errors.Select(error => error.Message));
+                return;
+            }
+
+            await OnProjectChanged.InvokeAsync(updated);
+            _diagnostics = _diagnostics.Append(new HistoryDiagnostic(
+                "history.decision.proposed",
+                "A decisão foi copiada como proposta; sua confirmação, análise e autoria histórica não foram transferidas.")).ToArray();
+        }
+        finally
+        {
+            _isBusy = false;
+        }
+    }
+
+    private void BeginRemove(string archiveId)
+    {
+        _removeArchiveId = archiveId;
+        _removeConfirmed = false;
+    }
+
+    private async Task RemoveAsync(string archiveId)
+    {
+        _errors.Clear();
+        _isBusy = true;
+        try
+        {
+            var result = await Sender.Send(new RemoveHistoricalProjectCommand(archiveId, _removeConfirmed));
+            if (!result.TryGetValue(out _))
+            {
+                _errors.AddRange(result.Errors.Select(error => error.Message));
+                return;
+            }
+
+            _removeArchiveId = null;
+            _removeConfirmed = false;
+            if (_inspectedArchiveId == archiveId)
+            {
+                _inspectedArchiveId = null;
+                _inspectedProject = null;
+            }
+
+            await SearchAsync();
+        }
+        finally
+        {
+            _isBusy = false;
+        }
+    }
+
+    private static string ProjectName(HistoricalProjectRecord record) =>
+        record.Features.FirstOrDefault(feature => feature.Path == "project.name")?.Value is System.Text.Json.JsonElement name &&
+        name.ValueKind == System.Text.Json.JsonValueKind.String
+            ? name.GetString()!
+            : record.ProjectId;
+}

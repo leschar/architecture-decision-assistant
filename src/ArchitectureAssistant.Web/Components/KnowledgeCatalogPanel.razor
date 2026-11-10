@@ -1,0 +1,217 @@
+@using ArchitectureAssistant.Application.Knowledge
+@using MediatR
+@inject ISender Sender
+
+<section class="panel catalog-panel" aria-labelledby="knowledge-heading">
+    <div class="panel-heading">
+        <div>
+            <p class="eyebrow">CONHECIMENTO VERSIONADO</p>
+            <h2 id="knowledge-heading">Catálogo arquitetural</h2>
+        </div>
+        @if (_catalog is not null)
+        {
+            <span class="count-badge">@FilteredItems.Count</span>
+        }
+    </div>
+
+    @if (_isLoading)
+    {
+        <p role="status">Carregando e validando o catálogo…</p>
+    }
+    else if (_errors.Count > 0)
+    {
+        <div class="alert alert-danger mt-3" role="alert">
+            <strong>O catálogo não foi carregado.</strong>
+            <ul class="mb-0">
+                @foreach (var error in _errors)
+                {
+                    <li>@error</li>
+                }
+            </ul>
+        </div>
+    }
+    else if (_catalog is not null)
+    {
+        <p class="catalog-meta">
+            @(_catalog.Items.Count) itens validados · schema @_catalog.SchemaVersion ·
+            conteúdo <code>@_catalog.ContentHash[..12]</code>
+        </p>
+
+        <div class="catalog-filters">
+            <div class="field">
+                <label for="knowledge-search">Buscar conhecimento</label>
+                <input id="knowledge-search"
+                       class="form-control"
+                       type="search"
+                       placeholder="Nome, descrição ou tag"
+                       @bind="_search"
+                       @bind:event="oninput" />
+            </div>
+            <div class="field">
+                <label for="knowledge-kind">Tipo</label>
+                <select id="knowledge-kind" class="form-select" @bind="_selectedKind">
+                    <option value="">Todos os tipos</option>
+                    <option value="Architecture">Arquiteturas</option>
+                    <option value="Pattern">Patterns</option>
+                    <option value="Technology">Tecnologias</option>
+                    <option value="Rule">Regras</option>
+                    <option value="Principle">Princípios</option>
+                    <option value="BestPractice">Boas práticas</option>
+                    <option value="AntiPattern">Anti-patterns</option>
+                    <option value="TradeOff">Trade-offs</option>
+                    <option value="Dependency">Dependências</option>
+                    <option value="ProjectTemplate">Modelos de projeto</option>
+                </select>
+            </div>
+        </div>
+
+        @if (FilteredItems.Count == 0)
+        {
+            <p class="empty-state">Nenhum item corresponde aos filtros.</p>
+        }
+        else
+        {
+            <div class="knowledge-list">
+                @foreach (var item in FilteredItems)
+                {
+                    <details class="knowledge-item" @key="item.Id">
+                        <summary>
+                            <span class="knowledge-item-title">@item.Name</span>
+                            <span class="knowledge-item-kind">@KindLabel(item.Kind)</span>
+                        </summary>
+                        <div class="knowledge-item-content">
+                            <p>@item.Description</p>
+                            <p class="project-link-meta">
+                                ID <code>@item.Id</code> · versão @item.Version
+                                @if (!string.IsNullOrWhiteSpace(item.Category))
+                                {
+                                    <span> · @item.Category</span>
+                                }
+                            </p>
+                            @if (item.Tags.Count > 0)
+                            {
+                                <p class="knowledge-tags">@string.Join(" · ", item.Tags)</p>
+                            }
+                            @if (item.Benefits.Count > 0)
+                            {
+                                <h3>Benefícios</h3>
+                                <ul>
+                                    @foreach (var benefit in item.Benefits)
+                                    {
+                                        <li>@benefit</li>
+                                    }
+                                </ul>
+                            }
+                            @if (item.Limitations.Count > 0)
+                            {
+                                <h3>Limitações e riscos</h3>
+                                <ul>
+                                    @foreach (var limitation in item.Limitations)
+                                    {
+                                        <li>@limitation</li>
+                                    }
+                                </ul>
+                            }
+                            @if (item.UseWhen.Count > 0)
+                            {
+                                <h3>Considere quando</h3>
+                                <ul>
+                                    @foreach (var condition in item.UseWhen)
+                                    {
+                                        <li>@condition</li>
+                                    }
+                                </ul>
+                            }
+                            @if (item.AvoidWhen.Count > 0)
+                            {
+                                <h3>Evite quando</h3>
+                                <ul>
+                                    @foreach (var condition in item.AvoidWhen)
+                                    {
+                                        <li>@condition</li>
+                                    }
+                                </ul>
+                            }
+                            @if (item.Complexity.HasValue || item.Scalability.HasValue || item.OperationalCost.HasValue)
+                            {
+                                <p class="knowledge-metrics">
+                                    @if (item.Complexity.HasValue)
+                                    {
+                                        <span>Complexidade: @item.Complexity/10</span>
+                                    }
+                                    @if (item.Scalability.HasValue)
+                                    {
+                                        <span>Escalabilidade: @item.Scalability/10</span>
+                                    }
+                                    @if (item.OperationalCost.HasValue)
+                                    {
+                                        <span>Custo operacional: @item.OperationalCost/10</span>
+                                    }
+                                </p>
+                            }
+                        </div>
+                    </details>
+                }
+            </div>
+        }
+    }
+</section>
+
+@code {
+    private readonly List<string> _errors = [];
+    private KnowledgeCatalogSnapshot? _catalog;
+    private bool _isLoading = true;
+    private string _search = string.Empty;
+    private string _selectedKind = string.Empty;
+
+    private IReadOnlyList<KnowledgeItemView> FilteredItems =>
+        _catalog?.Items
+            .Where(item => string.IsNullOrEmpty(_selectedKind) || item.Kind == _selectedKind)
+            .Where(MatchesSearch)
+            .ToArray()
+        ?? Array.Empty<KnowledgeItemView>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var result = await Sender.Send(new GetKnowledgeCatalogQuery());
+        if (result.TryGetValue(out var catalog))
+        {
+            _catalog = catalog;
+        }
+        else
+        {
+            _errors.AddRange(result.Errors.Select(error => error.Message));
+        }
+
+        _isLoading = false;
+    }
+
+    private bool MatchesSearch(KnowledgeItemView item)
+    {
+        if (string.IsNullOrWhiteSpace(_search))
+        {
+            return true;
+        }
+
+        return item.Name.Contains(_search, StringComparison.CurrentCultureIgnoreCase)
+            || item.Description.Contains(_search, StringComparison.CurrentCultureIgnoreCase)
+            || item.Id.Contains(_search, StringComparison.CurrentCultureIgnoreCase)
+            || item.Tags.Any(tag => tag.Contains(_search, StringComparison.CurrentCultureIgnoreCase));
+    }
+
+    private static string KindLabel(string kind) =>
+        kind switch
+        {
+            "Architecture" => "Arquitetura",
+            "Pattern" => "Pattern",
+            "Technology" => "Tecnologia",
+            "Rule" => "Regra",
+            "Principle" => "Princípio",
+            "BestPractice" => "Boa prática",
+            "AntiPattern" => "Anti-pattern",
+            "TradeOff" => "Trade-off",
+            "Dependency" => "Dependência",
+            "ProjectTemplate" => "Modelo de projeto",
+            _ => kind
+        };
+}
